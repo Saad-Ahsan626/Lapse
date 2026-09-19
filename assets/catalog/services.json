@@ -1,0 +1,617 @@
+{
+  "version": 1,
+  "services": [
+    {
+      "key": "netflix",
+      "name": "Netflix",
+      "category": "Entertainment",
+      "initials": "NF",
+      "brandColor": "#E50914",
+      "defaultPeriod": "monthly",
+      "cancelUrl": "https://www.netflix.com/cancelplan",
+      "popularRank": 1,
+      "aliases": []
+    },
+    {
+      "key": "spotify",
+      "name": "Spotify",
+      "category": "Music",
+      "initials": "SP",
+      "brandColor": "#1DB954",
+      "defaultPeriod": "monthly",
+      "cancelUrl": "https://www.spotify.com/account/subscription/",
+      "popularRank": 2,
+      "aliases": [
+        "spotify premium"
+      ]
+    },
+    {
+      "key": "youtube_premium",
+      "name": "YouTube Premium",
+      "category": "Entertainment",
+      "initials": "YT",
+      "brandColor": "#FF0000",
+      "defaultPeriod": "monthly",
+      "cancelUrl": "https://www.youtube.com/paid_memberships",
+      "popularRank": 3,
+      "aliases": [
+        "yt",
+        "youtube"
+      ]
+    },
+    {
+      "key": "prime_video",
+      "name": "Prime Video",
+      "category": "Entertainment",
+      "initials": "PR",
+      "brandColor": "#00A8E1",
+      "defaultPeriod": "monthly",
+      "popularRank": 4,
+      "aliases": [
+        "amazon prime",
+        "prime",
+        "amazon"
+      ]
+    },
+    {
+      "key": "chatgpt_plus",
+      "name": "ChatGPT Plus",
+      "category": "AI",
+      "initials": "GP",
+      "brandColor": "#10A37F",
+      "defaultPeriod": "monthly",
+      "popularRank": 5,
+      "aliases": [
+        "openai",
+        "gpt",
+        "chatgpt"
+      ]
+    },
+    {
+      "key": "canva",
+      "name": "Canva",
+      "category": "Design",
+      "initials": "CV",
+      "brandColor": "#00C4CC",
+      "defaultPeriod": "monthly",
+      "cancelUrl": "https://www.canva.com/settings/billing-and-plans",
+      "popularRank": 6,
+      "aliases": [
+        "canva pro"
+      ]
+    },
+    {
+      "key": "disney_plus",
+      "name": "Disney+",
+      "category": "Entertainment",
+      "initials": "D+",
+      "brandColor": "#113CCF",
+      "defaultPeriod": "monthly",
+      "popularRank": 7,
+      "aliases": [
+        "disney plus",
+        "disney",
+        "hotstar"
+      ]
+    },
+    {
+      "key": "icloud_plus",
+      "name": "iCloud+",
+      "category": "Storage",
+      "initials": "IC",
+      "brandColor": "#3693F3",
+      "defaultPeriod": "monthly",
+      "cancelUrl": "https://apps.apple.com/account/subscriptions",
+      "popularRank": 8,
+      "aliases": [
+        "icloud",
+        "apple storage"
+      ]
+    },
+    {
+      "key": "notion",
+      "name": "Notion",
+      "category": "Productivity",
+      "initials": "NT",
+      "brandColor": "#000000",
+      "defaultPeriod": "monthly",
+      "popularRank": 9,
+      "aliases": [
+        "notion plus"
+      ]
+    },
+    {
+      "key": "figma",
+      "name": "Figma",
+      "category": "Design",
+      "initials": "FG",
+      "brandColor": "#F24E1E",
+      "defaultPeriod": "monthly",
+      "popularRank": 10,
+      "aliases": [
+        "figma professional"
+      ]
+    },
+    {
+      "key": "apple_one",
+      "name": "Apple One",
+      "category": "Other",
+      "initials": "AP",
+      "brandColor": "#000000",
+      "defaultPeriod": "monthly",
+      "cancelUrl": "https://apps.apple.com/account/subscriptions",
+      "popularRank": 11,
+      "aliases": [
+        "apple"
+      ]
+    },
+    {
+      "key": "google_one",
+      "name": "Google One",
+      "category": "Storage",
+      "initials": "GO",
+      "brandColor": "#4285F4",
+      "defaultPeriod": "monthly",
+      "aliases": [
+        "google drive",
+        "drive",
+        "google storage"
+      ]
+    },
+    {
+      "key": "claude_pro",
+      "name": "Claude Pro",
+      "category": "AI",
+      "initials": "CL",
+      "brandColor": "#D97757",
+      "defaultPeriod": "monthly",
+      "cancelUrl": "https://claude.ai/settings/billing",
+      "aliases": [
+        "claude",
+        "anthropic"
+      ]
+    },
+    {
+      "key": "gemini_advanced",
+      "name": "Gemini Advanced",
+      "category": "AI",
+      "initials": "GE",
+      "brandColor": "#8E75B2",
+      "defaultPeriod": "monthly",
+      "aliases": [
+        "gemini",
+        "google ai pro",
+        "bard"
+      ]
+    },
+    {
+      "key": "perplexity_pro",
+      "name": "Perplexity Pro",
+      "category": "AI",
+      "initials": "PX",
+      "brandColor": "#20808D",
+      "defaultPeriod": "monthly",
+      "aliases": [
+        "perplexity"
+      ]
+    },
+    {
+      "key": "microsoft_365",
+      "name": "Microsoft 365",
+      "category": "Productivity",
+      "initials": "MS",
+      "brandColor": "#D83B01",
+      "defaultPeriod": "monthly",
+      "cancelUrl": "https://account.microsoft.com/services",
+      "aliases": [
+        "office",
+        "office 365",
+        "word",
+        "excel"
+      ]
+    },
+    {
+      "key": "grammarly",
+      "name": "Grammarly",
+      "category": "Productivity",
+      "initials": "GR",
+      "brandColor": "#15C39A",
+      "defaultPeriod": "monthly",
+      "cancelUrl": "https://account.grammarly.com/subscription",
+      "aliases": [
+        "grammarly premium"
+      ]
+    },
+    {
+      "key": "todoist",
+      "name": "Todoist",
+      "category": "Productivity",
+      "initials": "TD",
+      "brandColor": "#E44332",
+      "defaultPeriod": "monthly",
+      "aliases": [
+        "todoist pro"
+      ]
+    },
+    {
+      "key": "evernote",
+      "name": "Evernote",
+      "category": "Productivity",
+      "initials": "EN",
+      "brandColor": "#00A82D",
+      "defaultPeriod": "monthly",
+      "aliases": []
+    },
+    {
+      "key": "dropbox",
+      "name": "Dropbox",
+      "category": "Storage",
+      "initials": "DB",
+      "brandColor": "#0061FF",
+      "defaultPeriod": "monthly",
+      "cancelUrl": "https://www.dropbox.com/account/plan",
+      "aliases": [
+        "dropbox plus"
+      ]
+    },
+    {
+      "key": "adobe_creative_cloud",
+      "name": "Adobe Creative Cloud",
+      "category": "Design",
+      "initials": "CC",
+      "brandColor": "#FA0F00",
+      "defaultPeriod": "monthly",
+      "cancelUrl": "https://account.adobe.com/plans",
+      "aliases": [
+        "adobe",
+        "photoshop",
+        "illustrator",
+        "premiere",
+        "lightroom"
+      ]
+    },
+    {
+      "key": "github_copilot",
+      "name": "GitHub Copilot",
+      "category": "Developer",
+      "initials": "GH",
+      "brandColor": "#181717",
+      "defaultPeriod": "monthly",
+      "cancelUrl": "https://github.com/settings/billing",
+      "aliases": [
+        "github",
+        "copilot"
+      ]
+    },
+    {
+      "key": "jetbrains",
+      "name": "JetBrains",
+      "category": "Developer",
+      "initials": "JB",
+      "brandColor": "#000000",
+      "defaultPeriod": "yearly",
+      "aliases": [
+        "intellij",
+        "pycharm",
+        "webstorm",
+        "all products pack"
+      ]
+    },
+    {
+      "key": "hulu",
+      "name": "Hulu",
+      "category": "Entertainment",
+      "initials": "HU",
+      "brandColor": "#1CE783",
+      "defaultPeriod": "monthly",
+      "cancelUrl": "https://secure.hulu.com/account",
+      "aliases": []
+    },
+    {
+      "key": "max",
+      "name": "Max",
+      "category": "Entertainment",
+      "initials": "MX",
+      "brandColor": "#002BE7",
+      "defaultPeriod": "monthly",
+      "aliases": [
+        "hbo",
+        "hbo max"
+      ]
+    },
+    {
+      "key": "paramount_plus",
+      "name": "Paramount+",
+      "category": "Entertainment",
+      "initials": "P+",
+      "brandColor": "#0064FF",
+      "defaultPeriod": "monthly",
+      "aliases": [
+        "paramount plus",
+        "paramount"
+      ]
+    },
+    {
+      "key": "apple_tv_plus",
+      "name": "Apple TV+",
+      "category": "Entertainment",
+      "initials": "TV",
+      "brandColor": "#000000",
+      "defaultPeriod": "monthly",
+      "cancelUrl": "https://apps.apple.com/account/subscriptions",
+      "aliases": [
+        "apple tv",
+        "apple tv plus"
+      ]
+    },
+    {
+      "key": "crunchyroll",
+      "name": "Crunchyroll",
+      "category": "Entertainment",
+      "initials": "CR",
+      "brandColor": "#F47521",
+      "defaultPeriod": "monthly",
+      "aliases": [
+        "anime"
+      ]
+    },
+    {
+      "key": "peacock",
+      "name": "Peacock",
+      "category": "Entertainment",
+      "initials": "PC",
+      "brandColor": "#000000",
+      "defaultPeriod": "monthly",
+      "aliases": [
+        "nbc"
+      ]
+    },
+    {
+      "key": "shahid",
+      "name": "Shahid",
+      "category": "Entertainment",
+      "initials": "SH",
+      "brandColor": "#00B388",
+      "defaultPeriod": "monthly",
+      "aliases": [
+        "shahid vip",
+        "mbc"
+      ]
+    },
+    {
+      "key": "tapmad",
+      "name": "Tapmad",
+      "category": "Entertainment",
+      "initials": "TM",
+      "brandColor": "#E4003A",
+      "defaultPeriod": "monthly",
+      "aliases": [
+        "tapmad tv"
+      ]
+    },
+    {
+      "key": "starzplay",
+      "name": "Starzplay",
+      "category": "Entertainment",
+      "initials": "SZ",
+      "brandColor": "#00A6FF",
+      "defaultPeriod": "monthly",
+      "aliases": [
+        "starz",
+        "starz play",
+        "starz on"
+      ]
+    },
+    {
+      "key": "apple_music",
+      "name": "Apple Music",
+      "category": "Music",
+      "initials": "AM",
+      "brandColor": "#FA243C",
+      "defaultPeriod": "monthly",
+      "cancelUrl": "https://apps.apple.com/account/subscriptions",
+      "aliases": [
+        "itunes"
+      ]
+    },
+    {
+      "key": "youtube_music",
+      "name": "YouTube Music",
+      "category": "Music",
+      "initials": "YM",
+      "brandColor": "#FF0000",
+      "defaultPeriod": "monthly",
+      "cancelUrl": "https://www.youtube.com/paid_memberships",
+      "aliases": [
+        "youtube",
+        "youtube music"
+      ]
+    },
+    {
+      "key": "deezer",
+      "name": "Deezer",
+      "category": "Music",
+      "initials": "DZ",
+      "brandColor": "#A238FF",
+      "defaultPeriod": "monthly",
+      "aliases": [
+        "deezer premium"
+      ]
+    },
+    {
+      "key": "tidal",
+      "name": "Tidal",
+      "category": "Music",
+      "initials": "TI",
+      "brandColor": "#000000",
+      "defaultPeriod": "monthly",
+      "aliases": [
+        "hifi"
+      ]
+    },
+    {
+      "key": "audible",
+      "name": "Audible",
+      "category": "News & reading",
+      "initials": "AU",
+      "brandColor": "#F8991C",
+      "defaultPeriod": "monthly",
+      "aliases": [
+        "audiobooks",
+        "amazon audible"
+      ]
+    },
+    {
+      "key": "soundcloud_go",
+      "name": "SoundCloud Go",
+      "category": "Music",
+      "initials": "SC",
+      "brandColor": "#FF5500",
+      "defaultPeriod": "monthly",
+      "aliases": [
+        "soundcloud",
+        "soundcloud go plus"
+      ]
+    },
+    {
+      "key": "linkedin_premium",
+      "name": "LinkedIn Premium",
+      "category": "Other",
+      "initials": "LI",
+      "brandColor": "#0A66C2",
+      "defaultPeriod": "monthly",
+      "aliases": [
+        "linkedin"
+      ]
+    },
+    {
+      "key": "duolingo_super",
+      "name": "Duolingo Super",
+      "category": "Education",
+      "initials": "DU",
+      "brandColor": "#58CC02",
+      "defaultPeriod": "monthly",
+      "aliases": [
+        "duolingo",
+        "duolingo plus"
+      ]
+    },
+    {
+      "key": "headspace",
+      "name": "Headspace",
+      "category": "Health",
+      "initials": "HS",
+      "brandColor": "#F47D31",
+      "defaultPeriod": "monthly",
+      "aliases": [
+        "meditation"
+      ]
+    },
+    {
+      "key": "calm",
+      "name": "Calm",
+      "category": "Health",
+      "initials": "CA",
+      "brandColor": "#2F80ED",
+      "defaultPeriod": "yearly",
+      "aliases": [
+        "meditation",
+        "sleep"
+      ]
+    },
+    {
+      "key": "xbox_game_pass",
+      "name": "Xbox Game Pass",
+      "category": "Gaming",
+      "initials": "XB",
+      "brandColor": "#107C10",
+      "defaultPeriod": "monthly",
+      "cancelUrl": "https://account.microsoft.com/services",
+      "aliases": [
+        "xbox",
+        "game pass"
+      ]
+    },
+    {
+      "key": "playstation_plus",
+      "name": "PlayStation Plus",
+      "category": "Gaming",
+      "initials": "PS",
+      "brandColor": "#003791",
+      "defaultPeriod": "monthly",
+      "aliases": [
+        "ps plus",
+        "psn",
+        "playstation"
+      ]
+    },
+    {
+      "key": "nintendo_switch_online",
+      "name": "Nintendo Switch Online",
+      "category": "Gaming",
+      "initials": "NS",
+      "brandColor": "#E60012",
+      "defaultPeriod": "yearly",
+      "aliases": [
+        "nintendo",
+        "switch online"
+      ]
+    },
+    {
+      "key": "nordvpn",
+      "name": "NordVPN",
+      "category": "Security",
+      "initials": "NV",
+      "brandColor": "#4687FF",
+      "defaultPeriod": "yearly",
+      "aliases": [
+        "nord",
+        "vpn"
+      ]
+    },
+    {
+      "key": "expressvpn",
+      "name": "ExpressVPN",
+      "category": "Security",
+      "initials": "EV",
+      "brandColor": "#DA3940",
+      "defaultPeriod": "yearly",
+      "aliases": [
+        "express vpn",
+        "vpn"
+      ]
+    },
+    {
+      "key": "one_password",
+      "name": "1Password",
+      "category": "Security",
+      "initials": "1P",
+      "brandColor": "#0572EC",
+      "defaultPeriod": "yearly",
+      "aliases": [
+        "one password",
+        "password manager"
+      ]
+    },
+    {
+      "key": "medium",
+      "name": "Medium",
+      "category": "News & reading",
+      "initials": "MD",
+      "brandColor": "#000000",
+      "defaultPeriod": "monthly",
+      "aliases": [
+        "medium membership"
+      ]
+    },
+    {
+      "key": "patreon",
+      "name": "Patreon",
+      "category": "Other",
+      "initials": "PT",
+      "brandColor": "#FF424D",
+      "defaultPeriod": "monthly",
+      "aliases": []
+    }
+  ]
+}

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -5,8 +7,9 @@ import 'package:go_router/go_router.dart';
 import 'package:lapse/app/router/routes.dart';
 import 'package:lapse/core/theme/theme.dart';
 import 'package:lapse/core/widgets/widgets.dart';
+import 'package:lapse/features/catalog/presentation/catalog_picker.dart';
 
-class PlaceholderScreen extends StatelessWidget {
+class PlaceholderScreen extends StatefulWidget {
   const PlaceholderScreen({
     required this.title,
     required this.designRef,
@@ -35,13 +38,41 @@ class PlaceholderScreen extends StatelessWidget {
   ];
 
   @override
+  State<PlaceholderScreen> createState() => _PlaceholderScreenState();
+}
+
+class _PlaceholderScreenState extends State<PlaceholderScreen> {
+  bool _pickerOpen = false;
+
+  Future<void> _openPicker() async {
+    if (_pickerOpen) return;
+    setState(() => _pickerOpen = true);
+    await showCatalogPicker(context);
+    if (mounted) setState(() => _pickerOpen = false);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final lapse = context.lapse;
+    final showRouteLinks = widget.showRouteLinks;
+    final designRef = widget.designRef;
+    final phase = widget.phase;
     return Scaffold(
       appBar: context.canPop() ? AppBar() : null,
+      floatingActionButton: showRouteLinks
+          ? LapseFab(
+              open: _pickerOpen,
+              onPressed: () => unawaited(_openPicker()),
+            )
+          : null,
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(Space.screen),
+          padding: EdgeInsets.fromLTRB(
+            Space.screen,
+            Space.screen,
+            Space.screen,
+            showRouteLinks ? Space.screen + Sizes.fab + Space.lg : Space.screen,
+          ),
           children: [
             if (!context.canPop()) ...[
               const Align(
@@ -55,7 +86,7 @@ class PlaceholderScreen extends StatelessWidget {
               style: lapse.text.caption,
             ),
             const SizedBox(height: Space.sm),
-            Text(title, style: lapse.text.title),
+            Text(widget.title, style: lapse.text.title),
             const SizedBox(height: Space.sm),
             Text(
               'Placeholder. This screen is built in Phase $phase.',
@@ -79,7 +110,7 @@ class PlaceholderScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: Space.md),
               ],
-              for (final (label, path) in _links) ...[
+              for (final (label, path) in PlaceholderScreen._links) ...[
                 LapseButton(
                   label: label,
                   variant: LapseButtonVariant.secondary,

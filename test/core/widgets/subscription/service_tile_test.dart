@@ -50,4 +50,52 @@ void main() {
       matchesSemantics(label: 'Spotify', isImage: true),
     );
   });
+
+  testWidgets('very dark brand colours get a border in dark mode', (
+    tester,
+  ) async {
+    BoxBorder? borderFor(WidgetTester tester) =>
+        (tester
+                    .widget<Container>(
+                      find.descendant(
+                        of: find.byType(ServiceTile),
+                        matching: find.byType(Container),
+                      ),
+                    )
+                    .decoration!
+                as BoxDecoration)
+            .border;
+
+    await tester.pumpLapse(
+      const ServiceTile(
+        name: 'Notion',
+        initials: 'NT',
+        brandColor: Color(0xFF000000),
+      ),
+      brightness: Brightness.dark,
+    );
+    await tester.pumpAndSettle();
+    expect(borderFor(tester), isNotNull);
+
+    await tester.pumpLapse(
+      const ServiceTile(
+        name: 'Netflix',
+        initials: 'NF',
+        brandColor: Color(0xFFE50914),
+      ),
+      brightness: Brightness.dark,
+    );
+    await tester.pumpAndSettle();
+    expect(borderFor(tester), isNull);
+
+    await tester.pumpLapse(
+      const ServiceTile(
+        name: 'Notion',
+        initials: 'NT',
+        brandColor: Color(0xFF000000),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(borderFor(tester), isNull);
+  });
 }

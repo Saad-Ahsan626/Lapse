@@ -7,6 +7,7 @@ import 'package:lapse/features/debug/presentation/widgets/sections/buttons_secti
 import 'package:lapse/features/debug/presentation/widgets/sections/chips_section.dart';
 import 'package:lapse/features/debug/presentation/widgets/sections/colors_section.dart';
 import 'package:lapse/features/debug/presentation/widgets/sections/empty_state_section.dart';
+import 'package:lapse/features/debug/presentation/widgets/sections/form_controls_section.dart';
 import 'package:lapse/features/debug/presentation/widgets/sections/hero_card_section.dart';
 import 'package:lapse/features/debug/presentation/widgets/sections/inputs_section.dart';
 import 'package:lapse/features/debug/presentation/widgets/sections/rings_section.dart';
@@ -63,6 +64,7 @@ class _DesignGalleryScreenState extends State<DesignGalleryScreen> {
             const ButtonsSection(),
             const ChipsSection(),
             const InputsSection(),
+            const FormControlsSection(),
             const RingsSection(),
             const TilesSection(),
             const HeroCardSection(),

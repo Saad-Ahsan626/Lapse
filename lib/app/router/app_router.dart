@@ -6,6 +6,8 @@ import 'package:lapse/app/router/routes.dart';
 import 'package:lapse/features/debug/presentation/screens/data_inspector_screen.dart';
 import 'package:lapse/features/debug/presentation/screens/design_gallery_screen.dart';
 import 'package:lapse/features/placeholders/presentation/screens/placeholder_screen.dart';
+import 'package:lapse/features/subscriptions/presentation/form/subscription_form_args.dart';
+import 'package:lapse/features/subscriptions/presentation/screens/add_edit_subscription_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(
@@ -16,6 +18,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   ref.onDispose(router.dispose);
   return router;
 });
+
+String? _queryValue(GoRouterState state, String key) {
+  final value = state.uri.queryParameters[key]?.trim();
+  return value == null || value.isEmpty ? null : value;
+}
 
 final List<RouteBase> _routes = [
   GoRoute(
@@ -62,10 +69,11 @@ final List<RouteBase> _routes = [
   ),
   GoRoute(
     path: Routes.newSubscription,
-    builder: (_, _) => const PlaceholderScreen(
-      title: 'Add subscription',
-      designRef: '07',
-      phase: 2,
+    builder: (_, state) => AddEditSubscriptionScreen(
+      args: SubscriptionFormArgs(
+        serviceKey: _queryValue(state, 'service'),
+        name: _queryValue(state, 'name'),
+      ),
     ),
   ),
   GoRoute(
@@ -78,10 +86,8 @@ final List<RouteBase> _routes = [
     routes: [
       GoRoute(
         path: 'edit',
-        builder: (_, state) => PlaceholderScreen(
-          title: 'Edit ${state.pathParameters['id']}',
-          designRef: '07',
-          phase: 2,
+        builder: (_, state) => AddEditSubscriptionScreen(
+          args: SubscriptionFormArgs.edit(state.pathParameters['id']!),
         ),
       ),
     ],

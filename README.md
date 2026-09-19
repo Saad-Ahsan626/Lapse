@@ -18,8 +18,8 @@ Local-first: no account, no backend, no bank linking. Your data stays on your de
 |---|---|---|
 | 0 | Foundation & design system | ✅ Done |
 | 1 | Domain & data layer (models, SQLite, billing engine) | ✅ Done |
-| 2 | Catalog & Add / Edit | ⏳ Next |
-| 3 | Home, All subscriptions, Detail | — |
+| 2 | Catalog & Add / Edit | ✅ Done |
+| 3 | Home, All subscriptions, Detail | ⏳ Next |
 | 4 | Notifications | — |
 | 5 | Cancel flow, savings, celebration | — |
 | 6 | Splash, onboarding, setup | — |
@@ -27,9 +27,10 @@ Local-first: no account, no backend, no bank linking. Your data stays on your de
 | 8 | Motion & accessibility polish | — |
 | 9 | QA & release | — |
 
-Right now the app has the full design system, a tested domain and data layer (SQLite),
-placeholder screens for every route, and two debug tools: the **Design Gallery** and
-the **Data Inspector**.
+Right now you can add subscriptions and free trials from a catalog of 50 services (or
+as custom ones) and edit them. Home, the subscription list and the detail screen are
+still placeholders; saved data shows in the debug **Data Inspector**. The **Design
+Gallery** shows every design-system widget.
 
 ## MVP features
 
@@ -50,6 +51,7 @@ the **Data Inspector**.
 | State management | `flutter_riverpod` 3, providers written by hand |
 | Routing | `go_router` |
 | Database | `sqflite` (hand-written SQL) |
+| Formatting | `intl` (money grouping, dates) |
 | Settings | `shared_preferences` |
 | IDs | `uuid` |
 | Vector assets | `flutter_svg` (bundled service logos) |
@@ -122,27 +124,32 @@ lib/
 │   └── router/                     # app_router.dart, routes.dart
 ├── core/
 │   ├── database/                   # openAppDatabase, schema v1, migrations
-│   ├── domain/                     # CalendarDate, Money, Urgency, Clock, currency by country
+│   ├── domain/                     # CalendarDate, Money, Urgency, Clock, currencies
 │   ├── errors/                     # ValidationException
+│   ├── formatting/                 # formatMoney, parseMoneyInput, date labels
 │   ├── providers/                  # clock, today, ids, database, preferences
 │   ├── motion/                     # durations, curves, reduceMotion()
 │   ├── theme/                      # theme.dart barrel, ThemeData, tokens/
 │   └── widgets/                    # widgets.dart barrel + brand/ buttons/ chips/
 │                                   # inputs/ layout/ rings/ subscription/
 └── features/
+    ├── catalog/                    # service catalog: entity, ranked search, JSON loader,
+    │                               # providers, picker sheet (screen 06)
     ├── subscriptions/
     │   ├── domain/                 # entities, repository interface, BillingEngine,
     │   │                           # validator, use cases (pure Dart)
     │   ├── data/                   # SQLite data source, mappers, repository
-    │   └── presentation/providers/ # service + list providers
+    │   └── presentation/           # providers, form controller, add/edit screen (07)
     ├── settings/                   # AppSettings, repository over shared_preferences
     ├── debug/                      # Design Gallery, Data Inspector
     └── placeholders/               # stand-in screens until each phase lands
 
 assets/
+├── catalog/services.json           # 50 services: name, category, brand colour, cancel link
 ├── fonts/                          # Plus Jakarta Sans 400–800 + OFL.txt
 ├── brand/                          # logo / icon sources (not bundled; Phase 6 input)
-└── logos/                          # bundled service logos (added in Phase 2)
+├── logos/                          # optional service logos: <key>.svg (bundled)
+└── LOGOS.md                        # logo rules + source register (not bundled)
 
 test/                               # mirrors lib/, plus helpers/
 ```
@@ -192,11 +199,22 @@ features/<feature>/
 
 ---
 
+## Service catalog
+
+`assets/catalog/services.json` lists the services offered when adding a subscription. Each
+entry has a `key`, name, category, two-letter initials, brand colour, default billing
+period, search aliases and, where known, the official **cancel link**. Prices are not
+included: they differ by country and plan, so the user types them.
+
+To add a service, add an entry (keys are `snake_case`). A test checks the file: unique keys,
+popular ranks 1–11, https-only cancel links.
+
 ## Service logos
 
-Real service logos are bundled in `assets/logos/`, **unmodified** and taken from each
+Service logos are optional: drop `assets/logos/<key>.svg` in and the tile uses it, otherwise
+it shows the brand-coloured initials. Logos must be **unmodified** and taken from each
 company's official brand kit. They are used only to identify a service, and never in the
-Play Store listing or in marketing. [`assets/logos/LOGOS.md`](assets/logos/LOGOS.md)
+Play Store listing or in marketing. [`assets/LOGOS.md`](assets/LOGOS.md)
 lists the rules and records where each logo came from.
 
 ## Licence

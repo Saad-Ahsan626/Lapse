@@ -7,6 +7,8 @@ class SubscriptionValidator {
 
   static const maxReminderOffset = 30;
 
+  static final _cardNumber = RegExp(r'\d(?:[ -]*\d){12,}');
+
   Map<SubscriptionField, String> validate(Subscription subscription) {
     final errors = <SubscriptionField, String>{};
 
@@ -39,6 +41,10 @@ class SubscriptionValidator {
     if (subscription.nextBillingDate.isBefore(subscription.startDate)) {
       errors[SubscriptionField.nextBillingDate] =
           'The next charge cannot be before the start date';
+    }
+    final payment = subscription.paymentMethod;
+    if (payment != null && _cardNumber.hasMatch(payment)) {
+      errors[SubscriptionField.paymentMethod] = 'Only add the last 4 digits';
     }
 
     return errors;

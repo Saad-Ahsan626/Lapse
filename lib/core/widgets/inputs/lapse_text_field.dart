@@ -19,6 +19,11 @@ class LapseTextField extends StatefulWidget {
     this.onChanged,
     this.tabular = false,
     this.focusNode,
+    this.leading,
+    this.trailing,
+    this.onSuffixTap,
+    this.suffixSemanticLabel,
+    this.textStyle,
     super.key,
   });
 
@@ -38,6 +43,11 @@ class LapseTextField extends StatefulWidget {
 
   final bool tabular;
   final FocusNode? focusNode;
+  final Widget? leading;
+  final Widget? trailing;
+  final VoidCallback? onSuffixTap;
+  final String? suffixSemanticLabel;
+  final TextStyle? textStyle;
 
   @override
   State<LapseTextField> createState() => _LapseTextFieldState();
@@ -86,8 +96,8 @@ class _LapseTextFieldState extends State<LapseTextField> {
         ? c.primary
         : c.inputBorder;
 
-    final inputStyle = lapse.text.itemTitle.copyWith(
-      fontWeight: FontWeight.w500,
+    final inputStyle = (widget.textStyle ?? lapse.text.itemTitle).copyWith(
+      fontWeight: widget.textStyle == null ? FontWeight.w500 : null,
       fontFeatures: widget.tabular ? LapseTypography.tabular : null,
     );
     final unitStyle = lapse.text.itemTitle.copyWith(color: c.inkSubtle);
@@ -103,7 +113,12 @@ class _LapseTextFieldState extends State<LapseTextField> {
         AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           constraints: const BoxConstraints(minHeight: Sizes.input),
-          padding: const EdgeInsets.symmetric(horizontal: 14),
+          padding: EdgeInsets.only(
+            left: 14,
+            right: widget.trailing == null && widget.onSuffixTap == null
+                ? 14
+                : Space.xs,
+          ),
           decoration: BoxDecoration(
             color: _focused ? c.surface : c.inputFill,
             borderRadius: BorderRadius.circular(Radii.control),
@@ -114,6 +129,10 @@ class _LapseTextFieldState extends State<LapseTextField> {
           ),
           child: Row(
             children: [
+              if (widget.leading != null) ...[
+                widget.leading!,
+                const SizedBox(width: 10),
+              ],
               if (widget.prefixText != null) ...[
                 Text(widget.prefixText!, style: unitStyle),
                 const SizedBox(width: 10),
@@ -136,13 +155,13 @@ class _LapseTextFieldState extends State<LapseTextField> {
                   ),
                 ),
               ),
-              if (widget.suffixText != null) ...[
-                const SizedBox(width: 10),
-                Text(
-                  widget.suffixText!,
-                  style: lapse.text.chip.copyWith(color: c.inkSubtle),
+              if (widget.suffixText != null)
+                _Suffix(
+                  text: widget.suffixText!,
+                  onTap: widget.onSuffixTap,
+                  semanticLabel: widget.suffixSemanticLabel,
                 ),
-              ],
+              ?widget.trailing,
             ],
           ),
         ),
@@ -162,6 +181,52 @@ class _LapseTextFieldState extends State<LapseTextField> {
           ),
         ],
       ],
+    );
+  }
+}
+
+class _Suffix extends StatelessWidget {
+  const _Suffix({required this.text, this.onTap, this.semanticLabel});
+
+  final String text;
+  final VoidCallback? onTap;
+  final String? semanticLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final lapse = context.lapse;
+    final label = Text(
+      text,
+      style: lapse.text.chip.copyWith(
+        color: onTap == null ? lapse.colors.inkSubtle : lapse.colors.primary,
+      ),
+    );
+    if (onTap == null) {
+      return Padding(
+        padding: const EdgeInsets.only(left: 10),
+        child: label,
+      );
+    }
+    return Semantics(
+      button: true,
+      label: semanticLabel ?? text,
+      excludeSemantics: true,
+      onTap: onTap,
+      child: GestureDetector(
+        key: const ValueKey('lapse-text-field-suffix'),
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            minWidth: Sizes.minTap,
+            minHeight: Sizes.minTap,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Center(widthFactor: 1, child: label),
+          ),
+        ),
+      ),
     );
   }
 }

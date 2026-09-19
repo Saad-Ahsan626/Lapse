@@ -4,12 +4,17 @@ import 'package:lapse/core/theme/lapse_theme.dart';
 import 'package:lapse/core/theme/tokens/lapse_spacing.dart';
 import 'package:lapse/core/widgets/buttons/press_scale.dart';
 
+enum LapseChipTone { primary, trial }
+
 class LapseChip extends StatelessWidget {
   const LapseChip({
     required this.label,
     required this.selected,
     required this.onTap,
     this.showCheck = false,
+    this.compact = false,
+    this.tone = LapseChipTone.primary,
+    this.onTint = false,
     super.key,
   });
 
@@ -18,13 +23,23 @@ class LapseChip extends StatelessWidget {
   final VoidCallback? onTap;
 
   final bool showCheck;
+  final bool compact;
+  final LapseChipTone tone;
+  final bool onTint;
 
   @override
   Widget build(BuildContext context) {
     final lapse = context.lapse;
     final c = lapse.colors;
-    final bg = selected ? c.primary : c.surfaceMuted;
-    final fg = selected ? c.onPrimary : c.onSurfaceMuted;
+    final trial = tone == LapseChipTone.trial;
+    final selectedBg = trial ? c.trial : c.primary;
+    final selectedFg = trial ? c.onTrial : c.onPrimary;
+    final bg = selected
+        ? selectedBg
+        : onTint
+        ? c.surface
+        : c.surfaceMuted;
+    final fg = selected ? selectedFg : c.onSurfaceMuted;
 
     return Semantics(
       button: true,
@@ -44,17 +59,26 @@ class LapseChip extends StatelessWidget {
               duration: const Duration(milliseconds: 180),
               curve: Curves.easeOut,
               constraints: const BoxConstraints(minHeight: Sizes.chip),
-              padding: const EdgeInsets.symmetric(horizontal: 15),
+              padding: EdgeInsets.symmetric(horizontal: compact ? 12 : 15),
               decoration: BoxDecoration(
                 color: bg,
                 borderRadius: BorderRadius.circular(Radii.chip),
+                border: onTint
+                    ? Border.all(
+                        color: selected ? selectedBg : c.inputBorder,
+                      )
+                    : null,
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (showCheck && selected) ...[
-                    Icon(Icons.check_rounded, size: 16, color: fg),
-                    const SizedBox(width: 6),
+                    Icon(
+                      Icons.check_rounded,
+                      size: compact ? 15 : 16,
+                      color: fg,
+                    ),
+                    SizedBox(width: compact ? 5 : 6),
                   ],
                   Flexible(
                     child: Text(

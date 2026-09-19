@@ -21,6 +21,7 @@ abstract final class Radii {
   static const double lg = 20;
   static const double hero = 22;
   static const double xl = 24;
+  static const double sheet = 28;
   static const double pill = 999;
 
   static double tile(double size) => size * 0.3;
@@ -32,6 +33,7 @@ abstract final class Sizes {
   static const double chipSmall = 30;
   static const double badge = 26;
   static const double input = 53;
+  static const double fab = 56;
   static const double minTap = 44;
   static const double serviceTile = 44;
 }

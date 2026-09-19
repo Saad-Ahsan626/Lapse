@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:lapse/app/router/routes.dart';
 import 'package:lapse/core/domain/urgency.dart';
 import 'package:lapse/core/providers/clock_providers.dart';
 import 'package:lapse/core/theme/theme.dart';
@@ -74,8 +78,13 @@ class InspectorRow extends ConsumerWidget {
             style: lapse.text.meta,
           ),
           const SizedBox(height: Space.xs),
-          Row(
+          Wrap(
             children: [
+              LapseButton(
+                label: 'Edit',
+                variant: LapseButtonVariant.text,
+                onPressed: () => unawaited(context.push(Routes.edit(s.id))),
+              ),
               LapseButton(
                 label: s.isActive ? 'Cancel' : 'Restore',
                 variant: LapseButtonVariant.text,

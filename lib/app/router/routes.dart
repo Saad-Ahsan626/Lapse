@@ -7,6 +7,10 @@ abstract final class Routes {
   static const home = '/';
   static const subscriptions = '/subscriptions';
   static const newSubscription = '/subscription/new';
+  static String newSubscriptionFor({String? serviceKey, String? name}) => Uri(
+    path: newSubscription,
+    queryParameters: {'service': ?serviceKey, 'name': ?name},
+  ).toString();
   static String detail(String id) => '/subscription/$id';
   static String edit(String id) => '/subscription/$id/edit';
   static const settings = '/settings';

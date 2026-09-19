@@ -16,9 +16,8 @@ used **only to identify** the service a user subscribes to.
    respective owners. Lapse is not affiliated with or endorsed by them."*
 6. Remove a logo promptly if its owner asks.
 
-> This folder is added to `pubspec.yaml` in **Phase 2**, together with the catalog. This
-> file is excluded from the bundle then (declare the logo files, not the folder, or move
-> this file out).
+> Logo files live in `assets/logos/` (bundled with the app). This register sits outside
+> that folder so it isn't bundled.
 
 ## Register
 

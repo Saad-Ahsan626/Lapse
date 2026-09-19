@@ -76,5 +76,22 @@ void main() {
       await gesture.up();
       await tester.pumpAndSettle();
     });
+
+    testWidgets('loading shows a spinner and ignores taps', (tester) async {
+      var taps = 0;
+      await tester.pumpLapse(
+        LapseButton(label: 'Save', loading: true, onPressed: () => taps++),
+      );
+
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.text('Save'), findsNothing);
+      await tester.tap(find.byType(LapseButton));
+      await tester.pump();
+      expect(taps, 0);
+      expect(
+        tester.widget<AnimatedOpacity>(find.byType(AnimatedOpacity)).opacity,
+        1,
+      );
+    });
   });
 }

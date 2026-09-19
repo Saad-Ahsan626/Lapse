@@ -22,6 +22,7 @@ class LapseButton extends StatelessWidget {
     this.icon,
     this.trailingIcon,
     this.expand = false,
+    this.loading = false,
     super.key,
   });
 
@@ -32,11 +33,12 @@ class LapseButton extends StatelessWidget {
   final IconData? trailingIcon;
 
   final bool expand;
+  final bool loading;
 
   @override
   Widget build(BuildContext context) {
     final c = context.lapse.colors;
-    final enabled = onPressed != null;
+    final enabled = onPressed != null && !loading;
 
     final (Color bg, Color fg, BorderSide side) = switch (variant) {
       LapseButtonVariant.primary => (c.primary, c.onPrimary, BorderSide.none),
@@ -68,14 +70,14 @@ class LapseButton extends StatelessWidget {
       child: PressScale(
         enabled: enabled,
         child: AnimatedOpacity(
-          opacity: enabled ? 1 : 0.4,
+          opacity: enabled || loading ? 1 : 0.4,
           duration: const Duration(milliseconds: 150),
           child: Material(
             color: bg,
             shape: shape,
             clipBehavior: Clip.antiAlias,
             child: InkWell(
-              onTap: onPressed,
+              onTap: enabled ? onPressed : null,
               child: ConstrainedBox(
                 constraints: const BoxConstraints(minHeight: Sizes.button),
                 child: Padding(
@@ -84,20 +86,32 @@ class LapseButton extends StatelessWidget {
                     mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      if (icon != null) ...[
+                      if (icon != null && !loading) ...[
                         Icon(icon, size: 18, color: fg),
                         const SizedBox(width: Space.sm),
                       ],
-                      Flexible(
-                        child: Text(
-                          label,
-                          style: context.lapse.text.button.copyWith(color: fg),
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                      if (loading)
+                        SizedBox.square(
+                          dimension: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.2,
+                            color: fg,
+                            semanticsLabel: '$label, in progress',
+                          ),
+                        )
+                      else
+                        Flexible(
+                          child: Text(
+                            label,
+                            style: context.lapse.text.button.copyWith(
+                              color: fg,
+                            ),
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
-                      if (trailingIcon != null) ...[
+                      if (trailingIcon != null && !loading) ...[
                         const SizedBox(width: 6),
                         Icon(trailingIcon, size: 18, color: fg),
                       ],

@@ -85,6 +85,29 @@ void main() {
     );
   });
 
+  test('payment method must not hold a full card number', () {
+    for (final card in [
+      '4111 1111 1111 1111',
+      '4111-1111-1111-1111',
+      '4111111111111111',
+      'Visa 4111 1111 1111 1',
+    ]) {
+      expect(
+        validator.validate(valid.copyWith(paymentMethod: card)),
+        {SubscriptionField.paymentMethod: 'Only add the last 4 digits'},
+      );
+    }
+    for (final ok in [
+      'HBL ···· 4417',
+      'Visa 4417',
+      '411111111111',
+      '',
+      null,
+    ]) {
+      expect(validator.validate(valid.copyWith(paymentMethod: ok)), isEmpty);
+    }
+  });
+
   test('every error comes with a message', () {
     final errors = validator.validate(
       valid.copyWith(name: '', price: const Money(0, 'PKR')),

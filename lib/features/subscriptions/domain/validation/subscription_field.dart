@@ -6,4 +6,5 @@ enum SubscriptionField {
   reminderOffsets,
   cancelUrl,
   nextBillingDate,
+  paymentMethod,
 }

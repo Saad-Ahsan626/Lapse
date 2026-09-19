@@ -60,6 +60,9 @@ class ServiceTile extends StatelessWidget {
     } else {
       final bg = brandColor ?? c.tile;
       background = bg;
+      if (brandColor != null && c.isDark && bg.computeLuminance() < 0.03) {
+        border = Border.all(color: c.borderStrong);
+      }
       final fg = brandColor == null
           ? c.inkSubtle
           : (ThemeData.estimateBrightnessForColor(bg) == Brightness.dark
