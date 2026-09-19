@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:lapse/core/theme/app_theme.dart';
+import 'package:lapse/features/settings/presentation/providers/settings_providers.dart';
+
+import 'in_memory_settings_repository.dart';
 
 extension PumpApp on WidgetTester {
   Future<void> pumpLapse(
@@ -12,6 +15,7 @@ extension PumpApp on WidgetTester {
     double textScale = 1,
     bool wrapInScaffold = true,
     bool withProviders = false,
+    List<Override> overrides = const [],
   }) {
     final app = MaterialApp(
       theme: AppTheme.light(),
@@ -28,6 +32,17 @@ extension PumpApp on WidgetTester {
       ),
       home: wrapInScaffold ? Scaffold(body: Center(child: child)) : child,
     );
-    return pumpWidget(withProviders ? ProviderScope(child: app) : app);
+    if (!withProviders) return pumpWidget(app);
+    return pumpWidget(
+      ProviderScope(
+        overrides: [
+          settingsRepositoryProvider.overrideWithValue(
+            InMemorySettingsRepository(),
+          ),
+          ...overrides,
+        ],
+        child: app,
+      ),
+    );
   }
 }

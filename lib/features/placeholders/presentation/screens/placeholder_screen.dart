@@ -70,6 +70,13 @@ class PlaceholderScreen extends StatelessWidget {
                   expand: true,
                   onPressed: () => context.push(Routes.gallery),
                 ),
+                const SizedBox(height: Space.sm),
+                LapseButton(
+                  label: 'Open data inspector',
+                  icon: Icons.storage_rounded,
+                  expand: true,
+                  onPressed: () => context.push(Routes.dataInspector),
+                ),
                 const SizedBox(height: Space.md),
               ],
               for (final (label, path) in _links) ...[

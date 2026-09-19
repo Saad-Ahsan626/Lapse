@@ -3,9 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:lapse/app/app.dart';
+import 'package:lapse/app/bootstrap.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-  runApp(const ProviderScope(child: LapseApp()));
+  final container = await bootstrap();
+  runApp(
+    UncontrolledProviderScope(container: container, child: const LapseApp()),
+  );
 }

@@ -1,5 +1,7 @@
 # Lapse
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-4F46E5.svg)](LICENSE)
+
 **Cancel before it charges.**
 
 Lapse is a subscription and free-trial tracker for Android. It reminds you *before* a
@@ -15,8 +17,8 @@ Local-first: no account, no backend, no bank linking. Your data stays on your de
 | Phase | Scope | State |
 |---|---|---|
 | 0 | Foundation & design system | ✅ Done |
-| 1 | Domain & data layer (models, SQLite, billing engine) | ⏳ Next |
-| 2 | Catalog & Add / Edit | — |
+| 1 | Domain & data layer (models, SQLite, billing engine) | ✅ Done |
+| 2 | Catalog & Add / Edit | ⏳ Next |
 | 3 | Home, All subscriptions, Detail | — |
 | 4 | Notifications | — |
 | 5 | Cancel flow, savings, celebration | — |
@@ -25,8 +27,9 @@ Local-first: no account, no backend, no bank linking. Your data stays on your de
 | 8 | Motion & accessibility polish | — |
 | 9 | QA & release | — |
 
-Right now the app runs with the full design system, placeholder screens for every route,
-and a debug **Design Gallery**.
+Right now the app has the full design system, a tested domain and data layer (SQLite),
+placeholder screens for every route, and two debug tools: the **Design Gallery** and
+the **Data Inspector**.
 
 ## MVP features
 
@@ -46,6 +49,9 @@ and a debug **Design Gallery**.
 | Framework | Flutter 3.41 · Dart 3.11 · **Android only** |
 | State management | `flutter_riverpod` 3, providers written by hand |
 | Routing | `go_router` |
+| Database | `sqflite` (hand-written SQL) |
+| Settings | `shared_preferences` |
+| IDs | `uuid` |
 | Vector assets | `flutter_svg` (bundled service logos) |
 | Lints | `very_good_analysis` |
 | Font | Plus Jakarta Sans (bundled, OFL) |
@@ -88,6 +94,18 @@ brand, empty state) with:
 
 Use it to compare the widgets against the design file side by side.
 
+### Data Inspector (debug builds only)
+
+Home also shows **Open data inspector**. It works on the real database:
+
+- **Seed sample data**: 8 subscriptions (monthly, yearly, custom, a trial, one overdue,
+  one cancelled)
+- **Roll over now**: logs charges for dates that have passed and moves them forward
+- **+1 month / Reset time**: time travel with a fake clock
+- **Clear all**
+- Each row shows next date, days left, urgency, yearly and monthly cost, charge count, and
+  has Cancel / Restore / Delete
+
 ---
 
 ## Project structure
@@ -96,44 +114,37 @@ Clean Architecture, feature-first.
 
 ```
 lib/
-├── main.dart                       # entry point: edge-to-edge, ProviderScope
+├── main.dart                       # entry point: bootstrap, edge-to-edge
 ├── app/
 │   ├── app.dart                    # MaterialApp.router, themes, system bars
-│   ├── providers/
-│   │   └── theme_mode_provider.dart
-│   └── router/
-│       ├── app_router.dart         # GoRouter provider + route table
-│       └── routes.dart             # every path in one place
+│   ├── bootstrap.dart              # opens SQLite + settings, builds the ProviderContainer
+│   ├── providers/theme_mode_provider.dart
+│   └── router/                     # app_router.dart, routes.dart
 ├── core/
-│   ├── domain/                     # pure-Dart shared concepts (Urgency)
+│   ├── database/                   # openAppDatabase, schema v1, migrations
+│   ├── domain/                     # CalendarDate, Money, Urgency, Clock, currency by country
+│   ├── errors/                     # ValidationException
+│   ├── providers/                  # clock, today, ids, database, preferences
 │   ├── motion/                     # durations, curves, reduceMotion()
-│   ├── theme/
-│   │   ├── theme.dart              # ← barrel: import this in features
-│   │   ├── app_theme.dart          # Material ThemeData (light / dark)
-│   │   ├── lapse_theme.dart        # ThemeExtension + context.lapse
-│   │   └── tokens/
-│   │       ├── lapse_colors.dart
-│   │       ├── lapse_typography.dart
-│   │       └── lapse_spacing.dart  # Space, Radii, Sizes
-│   └── widgets/
-│       ├── widgets.dart            # ← barrel: import this in features
-│       ├── brand/                  # LogoMark, Wordmark, LapseLogoPainter
-│       ├── buttons/                # LapseButton, PressScale
-│       ├── chips/                  # LapseChip, UrgencyChip, TrialBadge, SavingsPill
-│       ├── inputs/                 # LapseTextField, LapseSwitchRow
-│       ├── layout/                 # LapseCard, SectionHeader, EmptyState
-│       ├── rings/                  # CountdownRing, RingGeometry
-│       └── subscription/           # ServiceTile, SubscriptionListTile
+│   ├── theme/                      # theme.dart barrel, ThemeData, tokens/
+│   └── widgets/                    # widgets.dart barrel + brand/ buttons/ chips/
+│                                   # inputs/ layout/ rings/ subscription/
 └── features/
-    ├── debug/presentation/         # Design Gallery (screens/, widgets/sections/)
-    └── placeholders/presentation/  # stand-in screens until each phase lands
+    ├── subscriptions/
+    │   ├── domain/                 # entities, repository interface, BillingEngine,
+    │   │                           # validator, use cases (pure Dart)
+    │   ├── data/                   # SQLite data source, mappers, repository
+    │   └── presentation/providers/ # service + list providers
+    ├── settings/                   # AppSettings, repository over shared_preferences
+    ├── debug/                      # Design Gallery, Data Inspector
+    └── placeholders/               # stand-in screens until each phase lands
 
 assets/
 ├── fonts/                          # Plus Jakarta Sans 400–800 + OFL.txt
 ├── brand/                          # logo / icon sources (not bundled; Phase 6 input)
 └── logos/                          # bundled service logos (added in Phase 2)
 
-test/                               # mirrors lib/
+test/                               # mirrors lib/, plus helpers/
 ```
 
 Each feature follows the same layout as it grows:
@@ -159,6 +170,8 @@ features/<feature>/
 - **Urgency is never colour-only.** Every urgency colour comes with text ("Tomorrow",
   "In 3 days", "Oct 24").
 - **Money uses tabular figures** so digits don't shift while counting.
+- **Money is `int` minor units** (`Money`), never `double`. **Billing dates are
+  `CalendarDate`**, never `DateTime`, so time zones and daylight saving can't shift a day.
 - **Reduce motion is respected.** Every animation checks `reduceMotion(context)`.
 - **Accessibility:** tap targets are at least 44×44, and widgets have `Semantics` labels.
 - **One widget per file**, named after the widget.
@@ -186,7 +199,12 @@ company's official brand kit. They are used only to identify a service, and neve
 Play Store listing or in marketing. [`assets/logos/LOGOS.md`](assets/logos/LOGOS.md)
 lists the rules and records where each logo came from.
 
-## Licences
+## Licence
+
+Lapse is released under the [MIT License](LICENSE).
+Copyright (c) 2026 Muhammad Saad Ahsan.
+
+Third-party:
 
 - Plus Jakarta Sans: SIL Open Font License 1.1 (`assets/fonts/OFL.txt`)
 - Service logos are trademarks of their respective owners. Lapse is not affiliated with

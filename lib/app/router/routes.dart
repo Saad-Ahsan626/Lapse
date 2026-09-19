@@ -12,4 +12,5 @@ abstract final class Routes {
   static const settings = '/settings';
 
   static const gallery = '/debug/gallery';
+  static const dataInspector = '/debug/data';
 }

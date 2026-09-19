@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'package:lapse/app/providers/theme_mode_provider.dart';
 import 'package:lapse/core/widgets/widgets.dart';
+import 'package:lapse/features/settings/domain/entities/app_theme_mode.dart';
+import 'package:lapse/features/settings/presentation/providers/settings_providers.dart';
 
 class GalleryControls extends ConsumerWidget {
   const GalleryControls({
@@ -16,22 +16,23 @@ class GalleryControls extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mode = ref.watch(themeModeProvider);
+    final mode = ref.watch(settingsProvider.select((s) => s.themeMode));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Wrap(
           spacing: 8,
           children: [
-            for (final m in ThemeMode.values)
+            for (final m in AppThemeMode.values)
               LapseChip(
                 label: switch (m) {
-                  ThemeMode.system => 'System',
-                  ThemeMode.light => 'Light',
-                  ThemeMode.dark => 'Dark',
+                  AppThemeMode.system => 'System',
+                  AppThemeMode.light => 'Light',
+                  AppThemeMode.dark => 'Dark',
                 },
                 selected: mode == m,
-                onTap: () => ref.read(themeModeProvider.notifier).mode = m,
+                onTap: () =>
+                    ref.read(settingsProvider.notifier).setThemeMode(m),
               ),
           ],
         ),

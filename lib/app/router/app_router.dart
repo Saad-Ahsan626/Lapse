@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:lapse/app/router/routes.dart';
+import 'package:lapse/features/debug/presentation/screens/data_inspector_screen.dart';
 import 'package:lapse/features/debug/presentation/screens/design_gallery_screen.dart';
 import 'package:lapse/features/placeholders/presentation/screens/placeholder_screen.dart';
 
@@ -90,9 +91,14 @@ final List<RouteBase> _routes = [
     builder: (_, _) =>
         const PlaceholderScreen(title: 'Settings', designRef: '11', phase: 7),
   ),
-  if (kDebugMode)
+  if (kDebugMode) ...[
     GoRoute(
       path: Routes.gallery,
       builder: (_, _) => const DesignGalleryScreen(),
     ),
+    GoRoute(
+      path: Routes.dataInspector,
+      builder: (_, _) => const DataInspectorScreen(),
+    ),
+  ],
 ];
