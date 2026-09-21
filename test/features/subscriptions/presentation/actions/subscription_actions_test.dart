@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lapse/core/providers/clock_providers.dart';
 import 'package:lapse/features/subscriptions/domain/entities/subscription.dart';
+import 'package:lapse/features/subscriptions/domain/entities/subscription_status.dart';
 import 'package:lapse/features/subscriptions/presentation/actions/subscription_actions.dart';
 import 'package:lapse/features/subscriptions/presentation/providers/subscription_service_providers.dart';
 
@@ -44,27 +45,13 @@ void main() {
     await tester.pump();
   }
 
-  testWidgets('mark cancelled shows the saving and Undo restores', (
-    tester,
-  ) async {
-    await pumpAction(tester, markCancelledWithUndo);
-
-    expect(repository.subscriptions['sub-1']!.isCancelled, isTrue);
-    expect(
-      find.text('Spotify Premium cancelled · saving Rs 7,788/year'),
-      findsOneWidget,
-    );
-
-    await tester.pump(const Duration(milliseconds: 500));
-    await tester.tap(find.text('Undo'));
-    await tester.pump();
-    await tester.pump();
-
-    expect(repository.subscriptions['sub-1']!.isActive, isTrue);
-  });
-
   testWidgets('restore reactivates and confirms', (tester) async {
-    await pumpAction(tester, markCancelledWithUndo);
+    repository.seed([
+      subscriptionFixture(
+        priceMinor: 64900,
+        status: SubscriptionStatus.cancelled,
+      ).copyWith(cancelledAt: DateTime.utc(2026, 9, 12)),
+    ]);
     await pumpAction(tester, restoreWithFeedback);
 
     expect(repository.subscriptions['sub-1']!.isActive, isTrue);

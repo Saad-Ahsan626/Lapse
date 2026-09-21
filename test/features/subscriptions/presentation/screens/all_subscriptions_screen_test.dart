@@ -146,9 +146,7 @@ void main() {
     );
   });
 
-  testWidgets('swiping reveals the actions and Cancelled marks it', (
-    tester,
-  ) async {
+  testWidgets('Cancelled collapses the row, then celebrates', (tester) async {
     await pumpScreen(tester);
 
     expect(find.text('Cancelled'), findsNothing);
@@ -156,24 +154,76 @@ void main() {
     expect(find.text('Cancelled'), findsOneWidget);
     expect(find.text('Delete'), findsOneWidget);
 
+    final row = find.ancestor(
+      of: find.text('Spotify Premium'),
+      matching: find.byType(SizeTransition),
+    );
+    final fullHeight = tester.getSize(row).height;
+
     await tester.tap(find.text('Cancelled'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 130));
+
+    expect(tester.getSize(row).height, lessThan(fullHeight));
+    expect(tester.getSize(row).height, greaterThan(0));
+    expect(repository.subscriptions['spotify']!.isActive, isTrue);
+    expect(find.text('Nice move.'), findsNothing);
+
+    await tester.pump(const Duration(milliseconds: 200));
     await tester.pump();
     await tester.pump(settle);
 
     expect(repository.subscriptions['spotify']!.isCancelled, isTrue);
-    expect(
-      find.textContaining('Spotify Premium cancelled'),
-      findsOneWidget,
-    );
-    expect(find.text('Undo'), findsOneWidget);
+    expect(find.text('Spotify Premium cancelled'), findsOneWidget);
+    expect(find.text('Nice move.'), findsOneWidget);
     expect(tabLabel('Active 2'), findsOneWidget);
     expect(tabLabel('Cancelled 2'), findsOneWidget);
 
     await tester.tap(find.text('Undo'));
     await tester.pump();
     await tester.pump(settle);
+    await tester.pump(settle);
 
     expect(repository.subscriptions['spotify']!.isActive, isTrue);
+    expect(find.text('Nice move.'), findsNothing);
+    expect(find.text('Spotify Premium restored'), findsOneWidget);
+    expect(tabLabel('Active 3'), findsOneWidget);
+    expect(tester.getSize(row).height, fullHeight);
+  });
+
+  testWidgets('Done keeps the row cancelled', (tester) async {
+    await pumpScreen(tester);
+
+    await swipe(tester, 'Spotify Premium');
+    await tester.tap(find.text('Cancelled'));
+    await tester.pump();
+    await tester.pump(settle);
+    await tester.pump(settle);
+    await tester.tap(find.text('Done'));
+    await tester.pump();
+    await tester.pump(settle);
+
+    expect(repository.subscriptions['spotify']!.isCancelled, isTrue);
+    expect(find.text('Nice move.'), findsNothing);
+    expect(find.text('Spotify Premium'), findsNothing);
+  });
+
+  testWidgets('only the Cancelled tab shows the savings card', (
+    tester,
+  ) async {
+    await pumpScreen(tester);
+    expect(find.text('Saved Rs 3,588 / year'), findsNothing);
+
+    await selectTab(tester, 'Trials 1');
+    expect(find.text('Saved Rs 3,588 / year'), findsNothing);
+
+    await selectTab(tester, 'Cancelled 1');
+    expect(find.text('Saved Rs 3,588 / year'), findsOneWidget);
+    expect(find.text('from 1 cancellation'), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.text('Saved Rs 3,588 / year')).dy,
+      lessThan(topOf(tester, 'Hulu')),
+    );
   });
 
   testWidgets('Delete asks first and removes on confirm', (tester) async {

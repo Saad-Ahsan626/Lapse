@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lapse/app/router/routes.dart';
 import 'package:lapse/core/theme/theme.dart';
 import 'package:lapse/core/widgets/widgets.dart';
+import 'package:lapse/features/savings/presentation/celebration.dart';
 import 'package:lapse/features/subscriptions/domain/entities/subscription.dart';
 import 'package:lapse/features/subscriptions/presentation/actions/subscription_actions.dart';
 import 'package:lapse/features/subscriptions/presentation/links/cancel_links.dart';
@@ -210,8 +211,9 @@ class _SubscriptionDetailScreenState
         DetailActionsBar(
           isCancelled: subscription.isCancelled,
           onCancelNow: () => unawaited(_cancelNow(subscription)),
-          onMarkCancelled: () =>
-              unawaited(markCancelledWithUndo(context, ref, subscription)),
+          onMarkCancelled: () => unawaited(
+            markCancelledWithCelebration(context, ref, subscription),
+          ),
           onRestore: () =>
               unawaited(restoreWithFeedback(context, ref, subscription)),
           onDelete: () => unawaited(_delete(subscription)),

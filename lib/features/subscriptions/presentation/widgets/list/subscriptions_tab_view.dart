@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:lapse/core/theme/theme.dart';
 import 'package:lapse/core/widgets/widgets.dart';
+import 'package:lapse/features/savings/presentation/widgets/savings_summary_card.dart';
 import 'package:lapse/features/subscriptions/domain/entities/subscription.dart';
 import 'package:lapse/features/subscriptions/presentation/providers/subscription_list_providers.dart';
 import 'package:lapse/features/subscriptions/presentation/providers/subscription_tab.dart';
@@ -44,6 +45,16 @@ class SubscriptionsTabView extends ConsumerWidget {
       ),
       AsyncValue(:final value?) => SliverMainAxisGroup(
         slivers: [
+          if (tab == SubscriptionTab.cancelled)
+            const SliverPadding(
+              padding: EdgeInsets.fromLTRB(
+                Space.screen,
+                0,
+                Space.screen,
+                Space.md,
+              ),
+              sliver: SliverToBoxAdapter(child: SavingsSummaryCard()),
+            ),
           SliverPadding(
             padding: padding,
             sliver: SliverList.separated(

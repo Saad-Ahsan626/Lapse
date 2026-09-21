@@ -45,4 +45,9 @@ void main() {
     expect(shortDateLabel(today), '19 Sep');
     expect(shortDateLabel(CalendarDate(2027, 1, 2)), '2 Jan');
   });
+
+  test('dayDateLabel', () {
+    expect(dayDateLabel(today), 'Sat, 19 Sep');
+    expect(dayDateLabel(CalendarDate(2027, 1, 2)), 'Sat, 2 Jan');
+  });
 }

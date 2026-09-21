@@ -12,6 +12,8 @@ enum LapseButtonVariant {
   text,
 
   danger,
+
+  inverse,
 }
 
 class LapseButton extends StatelessWidget {
@@ -23,6 +25,7 @@ class LapseButton extends StatelessWidget {
     this.trailingIcon,
     this.expand = false,
     this.loading = false,
+    this.foregroundColor,
     super.key,
   });
 
@@ -34,13 +37,14 @@ class LapseButton extends StatelessWidget {
 
   final bool expand;
   final bool loading;
+  final Color? foregroundColor;
 
   @override
   Widget build(BuildContext context) {
     final c = context.lapse.colors;
     final enabled = onPressed != null && !loading;
 
-    final (Color bg, Color fg, BorderSide side) = switch (variant) {
+    final (Color bg, Color variantFg, BorderSide side) = switch (variant) {
       LapseButtonVariant.primary => (c.primary, c.onPrimary, BorderSide.none),
       LapseButtonVariant.secondary => (
         c.surface,
@@ -57,7 +61,9 @@ class LapseButton extends StatelessWidget {
         c.dangerText,
         BorderSide.none,
       ),
+      LapseButtonVariant.inverse => (c.ink, c.background, BorderSide.none),
     };
+    final fg = foregroundColor ?? variantFg;
     final hPad = variant == LapseButtonVariant.text ? 18.0 : 22.0;
     final shape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(Radii.control),

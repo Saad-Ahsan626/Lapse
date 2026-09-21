@@ -32,6 +32,11 @@ class ButtonsSection extends StatelessWidget {
             variant: LapseButtonVariant.danger,
             onPressed: () {},
           ),
+          LapseButton(
+            label: 'Done',
+            variant: LapseButtonVariant.inverse,
+            onPressed: () {},
+          ),
           const LapseButton(label: 'Disabled', onPressed: null),
           LapseButton(
             label: 'Cancel now',

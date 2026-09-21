@@ -21,8 +21,8 @@ Local-first: no account, no backend, no bank linking. Your data stays on your de
 | 2 | Catalog & Add / Edit | ✅ Done |
 | 3 | Home, All subscriptions, Detail | ✅ Done |
 | 4 | Notifications | ✅ Done (device check pending) |
-| 5 | Cancel flow, savings, celebration | ⏳ Next |
-| 6 | Splash, onboarding, setup | — |
+| 5 | Cancel flow, savings, celebration | ✅ Done (device check pending) |
+| 6 | Splash, onboarding, setup | ⏳ Next |
 | 7 | Settings & backup | — |
 | 8 | Motion & accessibility polish | — |
 | 9 | QA & release | — |
@@ -32,7 +32,9 @@ yearly total, savings, trials ending soon and upcoming charges; you can add subs
 and free trials from a catalog of 50 services, see each one's countdown and details,
 **Cancel now ↗** straight to the service's cancel page, and mark subscriptions cancelled,
 restore or delete them. **Reminder notifications** arrive before each charge at 09:00 (7 and
-1 day before by default), with **Cancel now ↗** and **Snooze 1d** actions.
+1 day before by default), with **Cancel now ↗** and **Snooze 1d** actions. Marking a
+subscription cancelled opens a **celebration** with confetti and the yearly amount saved
+(one tap to undo), and the Cancelled tab keeps a running savings total.
 
 ## MVP features
 
@@ -92,7 +94,7 @@ Requirements: Flutter 3.41+ (stable), Android SDK, JDK 17+. Minimum Android vers
 
 Open **Settings** (the sliders button on Home) in a debug build for **Open design gallery**. The gallery renders every
 design-system widget (colours, type scale, spacing, buttons, chips, inputs, rings, tiles,
-brand, empty state) with:
+brand, empty state, celebration) with:
 
 - a **System / Light / Dark** theme switch
 - a **Simulate reduce motion** toggle
@@ -140,6 +142,8 @@ lib/
     ├── catalog/                    # service catalog: entity, ranked search, JSON loader,
     │                               # providers, picker sheet (screen 06)
     ├── home/                       # Home screen (05): totals, trials, upcoming, empty state
+    ├── savings/                    # cancellation stats + copy, celebration sheet (10),
+    │                               # Cancelled-tab savings card
     ├── reminders/                  # notifications: planner (pure), plugin gateway, sync,
     │                               # background snooze, permission screen (03), Home banner
     ├── subscriptions/
@@ -214,7 +218,9 @@ features/<feature>/
   money at risk). Only the default currency is added up.
 - **Per year:** the yearly cost of every active subscription (weekly × 52, monthly × 12,
   quarterly × 4, custom every N days × 365 / N).
-- **Saved:** the yearly cost of everything you've cancelled.
+- **Saved:** the yearly cost of everything you've cancelled (default currency). The same
+  number appears on the Home pill, in the celebration after each cancel, and on the
+  Cancelled tab.
 - **Other currencies** are listed separately under the totals (no exchange rates).
 - Charges whose date has passed are logged automatically when the app starts or comes back
   to the foreground, and the next date moves forward.

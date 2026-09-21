@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lapse/core/domain/calendar_date.dart';
+import 'package:lapse/features/savings/presentation/widgets/celebration_sheet.dart';
 import 'package:lapse/features/subscriptions/domain/entities/subscription.dart';
 import 'package:lapse/features/subscriptions/domain/entities/subscription_status.dart';
 import 'package:lapse/features/subscriptions/presentation/links/cancel_links.dart';
@@ -213,20 +214,43 @@ void main() {
   });
 
   group('actions', () {
-    testWidgets('mark as cancelled cancels with a snackbar', (tester) async {
+    testWidgets('mark as cancelled celebrates, Done keeps it cancelled', (
+      tester,
+    ) async {
       harness.repository.seed([chatGpt()]);
       await harness.pump(tester);
 
       await tester.tap(find.text('Mark as cancelled'));
-      await settle(tester);
+      await settle(tester, frames: 20);
 
       expect(harness.repository.subscriptions['sub-1']!.isCancelled, isTrue);
-      expect(
-        find.text('ChatGPT Plus cancelled · saving Rs 67,200/year'),
-        findsOneWidget,
-      );
+      expect(find.byType(CelebrationSheet), findsOneWidget);
+      expect(find.text('ChatGPT Plus cancelled'), findsOneWidget);
+      expect(find.text('Rs 67,200'), findsOneWidget);
+      expect(find.text('Nice move.'), findsOneWidget);
+
+      await tester.tap(find.text('Done'));
+      await settle(tester);
+
+      expect(find.byType(CelebrationSheet), findsNothing);
+      expect(harness.repository.subscriptions['sub-1']!.isCancelled, isTrue);
       expect(ringText('Cancelled'), findsOneWidget);
       expect(find.text('Restore'), findsOneWidget);
+    });
+
+    testWidgets('Undo on the celebration restores it', (tester) async {
+      harness.repository.seed([chatGpt()]);
+      await harness.pump(tester);
+
+      await tester.tap(find.text('Mark as cancelled'));
+      await settle(tester, frames: 20);
+      await tester.tap(find.text('Undo'));
+      await settle(tester);
+
+      expect(find.byType(CelebrationSheet), findsNothing);
+      expect(harness.repository.subscriptions['sub-1']!.isActive, isTrue);
+      expect(find.text('ChatGPT Plus restored'), findsOneWidget);
+      expect(find.text('Cancel now'), findsOneWidget);
     });
 
     testWidgets('restore brings it back', (tester) async {

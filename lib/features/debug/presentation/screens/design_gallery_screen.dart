@@ -4,6 +4,7 @@ import 'package:lapse/core/theme/theme.dart';
 import 'package:lapse/features/debug/presentation/widgets/gallery_controls.dart';
 import 'package:lapse/features/debug/presentation/widgets/sections/brand_section.dart';
 import 'package:lapse/features/debug/presentation/widgets/sections/buttons_section.dart';
+import 'package:lapse/features/debug/presentation/widgets/sections/celebration_section.dart';
 import 'package:lapse/features/debug/presentation/widgets/sections/chips_section.dart';
 import 'package:lapse/features/debug/presentation/widgets/sections/colors_section.dart';
 import 'package:lapse/features/debug/presentation/widgets/sections/empty_state_section.dart';
@@ -72,6 +73,7 @@ class _DesignGalleryScreenState extends State<DesignGalleryScreen> {
             const BrandSection(),
             const EmptyStateSection(),
             const ListsMotionSection(),
+            const CelebrationSection(),
           ],
         ),
       ),

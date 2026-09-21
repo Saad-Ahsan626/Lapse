@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:lapse/core/theme/tokens/lapse_colors.dart';
 import 'package:lapse/core/widgets/buttons/lapse_button.dart';
 
 import '../../../helpers/pump_app.dart';
@@ -93,5 +94,37 @@ void main() {
         1,
       );
     });
+
+    for (final (brightness, colors) in [
+      (Brightness.light, LapseColors.light),
+      (Brightness.dark, LapseColors.dark),
+    ]) {
+      testWidgets('inverse uses ink and background in ${brightness.name}', (
+        tester,
+      ) async {
+        await tester.pumpLapse(
+          LapseButton(
+            label: 'Done',
+            variant: LapseButtonVariant.inverse,
+            onPressed: () {},
+          ),
+          brightness: brightness,
+        );
+
+        final material = tester.widget<Material>(
+          find.descendant(
+            of: find.byType(LapseButton),
+            matching: find.byType(Material),
+          ),
+        );
+        expect(material.color, colors.ink);
+        final shape = material.shape! as RoundedRectangleBorder;
+        expect(shape.side, BorderSide.none);
+        expect(
+          tester.widget<Text>(find.text('Done')).style?.color,
+          colors.background,
+        );
+      });
+    }
   });
 }

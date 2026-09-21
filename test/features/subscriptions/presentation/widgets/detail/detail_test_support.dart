@@ -66,8 +66,10 @@ class DetailHarness {
     double textScale = 1,
     Size size = const Size(400, 900),
   }) async {
-    await tester.binding.setSurfaceSize(size);
-    addTearDown(() => tester.binding.setSurfaceSize(null));
+    tester.view
+      ..physicalSize = size
+      ..devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     router = GoRouter(
       initialLocation: pushed ? Routes.home : Routes.detail(id),
       routes: [

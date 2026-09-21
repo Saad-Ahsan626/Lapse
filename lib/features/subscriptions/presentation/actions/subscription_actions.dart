@@ -1,37 +1,10 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:lapse/core/formatting/money_formatter.dart';
 import 'package:lapse/core/theme/theme.dart';
 import 'package:lapse/core/widgets/widgets.dart';
 import 'package:lapse/features/subscriptions/domain/entities/subscription.dart';
 import 'package:lapse/features/subscriptions/presentation/providers/subscription_service_providers.dart';
-
-Future<void> markCancelledWithUndo(
-  BuildContext context,
-  WidgetRef ref,
-  Subscription subscription,
-) async {
-  final messenger = ScaffoldMessenger.of(context);
-  final restore = ref.read(restoreSubscriptionProvider);
-  final saved = await ref.read(markCancelledProvider)(subscription.id);
-  final message = saved.isPositive
-      ? '${subscription.name} cancelled · saving ${formatMoney(saved)}/year'
-      : '${subscription.name} cancelled';
-  messenger
-    ..hideCurrentSnackBar()
-    ..showSnackBar(
-      SnackBar(
-        content: Text(message),
-        action: SnackBarAction(
-          label: 'Undo',
-          onPressed: () => unawaited(restore(subscription.id)),
-        ),
-      ),
-    );
-}
 
 Future<void> restoreWithFeedback(
   BuildContext context,
