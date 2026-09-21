@@ -1,0 +1,1 @@
+enum ImportMode { replace, merge }

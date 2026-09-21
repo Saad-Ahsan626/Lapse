@@ -144,7 +144,7 @@ void main() {
     final entry = gateway.scheduled[RemindersDebugSection.testReminderId];
     expect(entry, isNotNull);
     final (reminder, exact) = entry!;
-    expect(exact, isFalse);
+    expect(exact, isTrue);
     expect(reminder.fireAt, _now.add(const Duration(seconds: 10)));
     expect(reminder.subscriptionId, 'netflix');
     expect(reminder.title, 'Netflix trial ends tomorrow');

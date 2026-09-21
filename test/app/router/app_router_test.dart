@@ -19,6 +19,8 @@ import 'package:lapse/features/reminders/data/notification_tap.dart';
 import 'package:lapse/features/reminders/presentation/screens/reminder_permission_screen.dart';
 import 'package:lapse/features/settings/domain/entities/app_settings.dart';
 import 'package:lapse/features/settings/presentation/providers/settings_providers.dart';
+import 'package:lapse/features/settings/presentation/screens/notification_troubleshooting_screen.dart';
+import 'package:lapse/features/settings/presentation/screens/settings_screen.dart';
 import 'package:lapse/features/splash/presentation/screens/splash_screen.dart';
 import 'package:lapse/features/subscriptions/presentation/screens/subscription_detail_screen.dart';
 
@@ -223,6 +225,20 @@ void main() {
 
       expect(path(), Routes.onboarding);
       expect(find.byType(OnboardingScreen), findsOneWidget);
+    });
+
+    testWidgets('settings and troubleshooting have real screens', (
+      tester,
+    ) async {
+      await pumpApp(tester, onboardingDone: true, initialLocation: Routes.home);
+
+      unawaited(router.push<void>(Routes.settings));
+      await _settle(tester);
+      expect(find.byType(SettingsScreen), findsOneWidget);
+
+      unawaited(router.push<void>(Routes.notificationTroubleshooting));
+      await _settle(tester);
+      expect(find.byType(NotificationTroubleshootingScreen), findsOneWidget);
     });
 
     testWidgets('a notification launch opens the detail, skipping splash', (

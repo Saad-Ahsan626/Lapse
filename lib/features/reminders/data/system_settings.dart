@@ -1,11 +1,7 @@
 import 'package:flutter/services.dart';
+import 'package:lapse/core/platform/method_channel_system_bridge.dart';
 
-const systemSettingsChannel = MethodChannel('lapse/system');
+const MethodChannel systemSettingsChannel = systemChannel;
 
-Future<void> openNotificationSettings() async {
-  try {
-    await systemSettingsChannel.invokeMethod<void>('openNotificationSettings');
-  } on MissingPluginException {
-    return;
-  }
-}
+Future<void> openNotificationSettings() =>
+    const MethodChannelSystemBridge().openNotificationSettings();

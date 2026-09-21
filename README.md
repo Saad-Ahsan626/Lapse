@@ -23,8 +23,8 @@ Local-first: no account, no backend, no bank linking. Your data stays on your de
 | 4 | Notifications | ✅ Done (device check pending) |
 | 5 | Cancel flow, savings, celebration | ✅ Done (device check pending) |
 | 6 | Splash, onboarding, setup | ✅ Done (device check pending) |
-| 7 | Settings & backup | ⏳ Next |
-| 8 | Motion & accessibility polish | — |
+| 7 | Settings & backup | ✅ Done (device check pending) |
+| 8 | Motion & accessibility polish | ⏳ Next |
 | 9 | QA & release | — |
 
 Right now the app works end to end. A first launch plays the animated logo, three
@@ -94,7 +94,8 @@ Requirements: Flutter 3.41+ (stable), Android SDK, JDK 17+. Minimum Android vers
 
 ### Design Gallery (debug builds only)
 
-Open **Settings** (the sliders button on Home) in a debug build for **Open design gallery**. The gallery renders every
+Open **Settings** (the sliders button on Home) in a debug build; the **Developer** group at
+the bottom has **Design gallery**. The gallery renders every
 design-system widget (colours, type scale, spacing, buttons, chips, inputs, rings, tiles,
 brand, empty state, celebration) with:
 
@@ -106,7 +107,7 @@ Use it to compare the widgets against the design file side by side.
 
 ### Data Inspector (debug builds only)
 
-Settings also shows **Open data inspector**. It works on the real database:
+The same group has **Data inspector** (and **Replay splash**). It works on the real database:
 
 - **Seed sample data**: 8 subscriptions (monthly, yearly, custom, a trial, one overdue,
   one cancelled)
@@ -135,6 +136,8 @@ lib/
 │   ├── domain/                     # CalendarDate, Money, Urgency, Clock, currencies
 │   ├── errors/                     # ValidationException
 │   ├── formatting/                 # formatMoney, parseMoneyInput, date labels
+│   ├── platform/                   # SystemBridge: Android channel (version, battery,
+│   │                               # Save as… / Open file pickers)
 │   ├── providers/                  # clock, today, ids, database, preferences
 │   ├── motion/                     # durations, curves, reduceMotion()
 │   ├── theme/                      # theme.dart barrel, ThemeData, tokens/
@@ -157,9 +160,10 @@ lib/
     │   ├── data/                   # SQLite data source, mappers, repository
     │   └── presentation/           # providers, form, actions, labels, links; screens:
     │                               # add/edit (07), detail (08), all subscriptions (09)
-    ├── settings/                   # AppSettings, repository over shared_preferences
-    ├── debug/                      # Design Gallery, Data Inspector
-    └── placeholders/               # stand-in screens until each phase lands
+    ├── settings/                   # AppSettings, repository; Settings screen (11),
+    │                               # editors, notification troubleshooting
+    ├── backup/                     # JSON backup: codec, validation, export / import
+    └── debug/                      # Design Gallery, Data Inspector
 
 assets/
 ├── catalog/services.json           # 50 services: name, category, brand colour, cancel link
@@ -245,6 +249,32 @@ features/<feature>/
 - **Permission** is asked in context (Home banner → permission screen), never on launch.
 - Debug builds: Settings → Data Inspector → **Reminders** shows permission, pending count,
   the next 20 planned reminders, **Sync now** and **Fire test in 10 s**.
+
+## Settings & backup
+
+Settings (11) holds the defaults the app uses: currency (for new subscriptions and totals),
+default reminders (for new subscriptions), reminder time (reschedules every reminder), theme,
+and your name for the Home greeting. **Notification troubleshooting** shows notification
+permission, exact timing, battery optimisation and what's scheduled, each with a fix
+button, plus **Send test notification** and **Sync now**.
+
+**Backup** uses Android's own Save as… / Open pickers (no storage permission), so a file
+can go to Downloads or Google Drive and survive an uninstall. Import validates the whole
+file first and changes nothing if anything is wrong, then shows a preview:
+
+- **Merge** — by id, the copy edited last wins; payments are added if missing
+- **Replace all** — the backup becomes your data
+
+```json
+{
+  "app": "lapse",
+  "schemaVersion": 1,
+  "exportedAt": "2026-09-21T09:00:00.000Z",
+  "settings": { "defaultCurrency": "PKR", "reminderMinutes": 540, "...": "..." },
+  "subscriptions": [ { "id": "…", "name": "Netflix", "price": { "minor": 64900, "currency": "PKR" }, "...": "..." } ],
+  "charges": [ { "id": "…", "subscriptionId": "…", "chargedOn": "2026-09-19", "...": "..." } ]
+}
+```
 
 ## App icon & launch
 

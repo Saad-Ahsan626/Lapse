@@ -10,12 +10,14 @@ class SegmentedTabs<T> extends StatelessWidget {
     required this.tabs,
     required this.selected,
     required this.onChanged,
+    this.selectedColor,
     super.key,
   });
 
   final List<SegmentedTab<T>> tabs;
   final T selected;
   final ValueChanged<T> onChanged;
+  final Color? selectedColor;
 
   static const double _padding = 4;
   static const double _segmentRadius = 11;
@@ -49,7 +51,7 @@ class SegmentedTabs<T> extends StatelessWidget {
                   heightFactor: 1,
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: isDark ? c.tile : c.surface,
+                      color: selectedColor ?? (isDark ? c.tile : c.surface),
                       borderRadius: BorderRadius.circular(_segmentRadius),
                       boxShadow: c.cardShadow,
                     ),

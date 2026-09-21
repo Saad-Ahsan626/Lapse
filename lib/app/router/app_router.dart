@@ -10,9 +10,10 @@ import 'package:lapse/features/debug/presentation/screens/design_gallery_screen.
 import 'package:lapse/features/home/presentation/screens/home_screen.dart';
 import 'package:lapse/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:lapse/features/onboarding/presentation/screens/setup_screen.dart';
-import 'package:lapse/features/placeholders/presentation/screens/placeholder_screen.dart';
 import 'package:lapse/features/reminders/presentation/screens/reminder_permission_screen.dart';
 import 'package:lapse/features/settings/presentation/providers/settings_providers.dart';
+import 'package:lapse/features/settings/presentation/screens/notification_troubleshooting_screen.dart';
+import 'package:lapse/features/settings/presentation/screens/settings_screen.dart';
 import 'package:lapse/features/splash/presentation/screens/splash_screen.dart';
 import 'package:lapse/features/subscriptions/presentation/form/subscription_form_args.dart';
 import 'package:lapse/features/subscriptions/presentation/providers/subscription_tab.dart';
@@ -138,12 +139,13 @@ final List<RouteBase> _routes = [
   ),
   GoRoute(
     path: Routes.settings,
-    builder: (_, _) => const PlaceholderScreen(
-      title: 'Settings',
-      designRef: '11',
-      phase: 7,
-      showDebugLinks: true,
-    ),
+    builder: (_, _) => const SettingsScreen(),
+    routes: [
+      GoRoute(
+        path: 'notifications',
+        builder: (_, _) => const NotificationTroubleshootingScreen(),
+      ),
+    ],
   ),
   if (kDebugMode) ...[
     GoRoute(

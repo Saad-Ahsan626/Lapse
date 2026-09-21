@@ -3,24 +3,19 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:lapse/core/domain/calendar_date.dart';
-import 'package:lapse/core/providers/clock_providers.dart';
 import 'package:lapse/core/theme/theme.dart';
 import 'package:lapse/core/widgets/widgets.dart';
 import 'package:lapse/features/reminders/application/reminder_providers.dart';
 import 'package:lapse/features/reminders/data/reminder_permission.dart';
-import 'package:lapse/features/reminders/domain/planned_reminder.dart';
-import 'package:lapse/features/reminders/domain/reminder_content.dart';
-import 'package:lapse/features/reminders/domain/reminder_kind.dart';
+import 'package:lapse/features/settings/presentation/actions/test_notification.dart';
 import 'package:lapse/features/subscriptions/domain/entities/subscription.dart';
-import 'package:lapse/features/subscriptions/presentation/links/cancel_links.dart';
 import 'package:lapse/features/subscriptions/presentation/providers/subscription_list_providers.dart';
 
 class RemindersDebugSection extends ConsumerWidget {
   const RemindersDebugSection({super.key});
 
-  static const testReminderId = 999999;
-  static const testDelay = Duration(seconds: 10);
+  static const int testReminderId = testNotificationId;
+  static const Duration testDelay = testNotificationDelay;
   static const listLimit = 20;
 
   static final _fireTime = DateFormat('EEE d MMM HH:mm', 'en_US');
@@ -45,50 +40,11 @@ class RemindersDebugSection extends ConsumerWidget {
   }
 
   Future<void> _fireTest(BuildContext context, WidgetRef ref) async {
-    final now = ref.read(clockProvider)();
-    final base = _testSource(ref, now);
-    if (base == null) {
-      _toast(context, 'Add an active subscription first');
-      return;
-    }
-    final reminder = PlannedReminder(
-      id: testReminderId,
-      subscriptionId: base.subscriptionId,
-      fireAt: now.add(testDelay),
-      title: base.title,
-      body: base.body,
-      kind: base.kind,
-      hasCancelLink: base.hasCancelLink,
-    );
-    await ref
-        .read(notificationGatewayProvider)
-        .schedule(reminder, exact: false);
-    ref.invalidate(pendingReminderIdsProvider);
+    await scheduleTestNotification(ref);
     if (!context.mounted) return;
-    _toast(context, 'Test reminder fires in ${testDelay.inSeconds} s');
-  }
-
-  PlannedReminder? _testSource(WidgetRef ref, DateTime now) {
-    final planned = ref.read(plannedRemindersProvider).value ?? const [];
-    if (planned.isNotEmpty) return planned.first;
-    final subscriptions = ref.read(subscriptionsProvider).value ?? const [];
-    final active = subscriptions.where((s) => s.isActive);
-    if (active.isEmpty) return null;
-    final subscription = active.first;
-    final content = ReminderContent.forSubscription(
-      subscription,
-      fireDay: CalendarDate.fromDateTime(now),
-    );
-    return PlannedReminder(
-      id: testReminderId,
-      subscriptionId: subscription.id,
-      fireAt: now,
-      title: content.title,
-      body: content.body,
-      kind: subscription.isTrial
-          ? ReminderKind.trialEnding
-          : ReminderKind.renewal,
-      hasCancelLink: cancelUriFor(subscription) != null,
+    _toast(
+      context,
+      'Test reminder fires in ${testDelay.inSeconds} s',
     );
   }
 
