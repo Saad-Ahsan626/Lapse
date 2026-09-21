@@ -9,6 +9,8 @@ import 'package:lapse/core/providers/storage_providers.dart';
 import 'package:lapse/features/reminders/application/reminder_providers.dart';
 import 'package:lapse/features/reminders/application/reminders_bootstrap.dart';
 import 'package:lapse/features/settings/data/repositories/settings_repository_impl.dart';
+import 'package:lapse/features/settings/presentation/providers/settings_providers.dart';
+import 'package:lapse/features/subscriptions/presentation/providers/subscription_service_providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<ProviderContainer> bootstrap() async {
@@ -18,7 +20,7 @@ Future<ProviderContainer> bootstrap() async {
       allowList: SettingsRepositoryImpl.allKeys,
     ),
   );
-  var initialLocation = Routes.home;
+  var initialLocation = Routes.splash;
   final container = ProviderContainer(
     overrides: [
       databaseProvider.overrideWithValue(database),
@@ -26,6 +28,7 @@ Future<ProviderContainer> bootstrap() async {
       initialLocationProvider.overrideWith((ref) => initialLocation),
     ],
   );
+  await skipOnboardingForExistingInstall(container);
   final launch = await bootstrapReminders(container);
   initialLocation = initialLocationFor(launch);
   if (launch != null) {
@@ -36,4 +39,21 @@ Future<ProviderContainer> bootstrap() async {
     );
   }
   return container;
+}
+
+Future<void> skipOnboardingForExistingInstall(
+  ProviderContainer container,
+) async {
+  try {
+    if (container.read(settingsProvider).onboardingDone) return;
+    final existing = await container
+        .read(subscriptionRepositoryProvider)
+        .getAll();
+    if (existing.isEmpty) return;
+    await container
+        .read(settingsProvider.notifier)
+        .update((settings) => settings.copyWith(onboardingDone: true));
+  } on Object {
+    return;
+  }
 }

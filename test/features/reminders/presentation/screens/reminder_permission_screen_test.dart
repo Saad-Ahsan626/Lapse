@@ -32,6 +32,7 @@ Future<_Harness> _pump(
   ReminderPermission requestResult = ReminderPermission.granted,
   Brightness brightness = Brightness.light,
   double textScale = 1,
+  bool inOnboarding = false,
 }) async {
   tester.view
     ..physicalSize = const Size(1170, 2532)
@@ -44,8 +45,14 @@ Future<_Harness> _pump(
   );
   final settings = InMemorySettingsRepository();
   final router = GoRouter(
-    initialLocation: '/reminders/permission',
+    initialLocation: inOnboarding
+        ? '/onboarding/permission'
+        : '/reminders/permission',
     routes: [
+      GoRoute(
+        path: '/onboarding/permission',
+        builder: (_, _) => const ReminderPermissionScreen(inOnboarding: true),
+      ),
       GoRoute(
         path: '/',
         builder: (_, _) => const Scaffold(body: Text('Home page')),
@@ -226,6 +233,81 @@ void main() {
     expect(harness.settings.load().remindersPromptSnoozedUntil!.isUtc, isTrue);
     expect(harness.gateway.permissionRequests, 0);
     expect(find.text('Home page'), findsOneWidget);
+  });
+
+  group('in onboarding', () {
+    testWidgets('Allow finishes onboarding and goes Home when granted', (
+      tester,
+    ) async {
+      final harness = await _pump(tester, inOnboarding: true);
+
+      await _tap(tester, 'Allow notifications');
+
+      expect(harness.gateway.permissionRequests, 1);
+      expect(harness.settings.load().onboardingDone, isTrue);
+      expect(find.text('Home page'), findsOneWidget);
+      expect(find.byType(ReminderPermissionScreen), findsNothing);
+      expect(
+        find.text(ReminderPermissionScreen.grantedMessage),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('Allow still goes Home when the request is denied', (
+      tester,
+    ) async {
+      final harness = await _pump(
+        tester,
+        inOnboarding: true,
+        requestResult: ReminderPermission.permanentlyDenied,
+      );
+
+      await _tap(tester, 'Allow notifications');
+
+      expect(harness.gateway.permissionRequests, 1);
+      expect(harness.settings.load().onboardingDone, isTrue);
+      expect(find.text('Home page'), findsOneWidget);
+      expect(find.text('Open settings'), findsNothing);
+      expect(find.text(ReminderPermissionScreen.grantedMessage), findsNothing);
+    });
+
+    testWidgets('Maybe later snoozes, finishes onboarding and goes Home', (
+      tester,
+    ) async {
+      final harness = await _pump(tester, inOnboarding: true);
+
+      await _tap(tester, 'Maybe later');
+
+      expect(harness.gateway.permissionRequests, 0);
+      expect(harness.settings.load().onboardingDone, isTrue);
+      expect(
+        harness.settings.load().remindersPromptSnoozedUntil,
+        _now.toUtc().add(ReminderPermissionScreen.snooze),
+      );
+      expect(find.text('Home page'), findsOneWidget);
+      expect(find.byType(ReminderPermissionScreen), findsNothing);
+    });
+
+    testWidgets('already granted Done finishes onboarding', (tester) async {
+      final harness = await _pump(
+        tester,
+        inOnboarding: true,
+        initial: ReminderPermission.granted,
+      );
+
+      await _tap(tester, 'Done');
+
+      expect(harness.settings.load().onboardingDone, isTrue);
+      expect(find.text('Home page'), findsOneWidget);
+    });
+  });
+
+  testWidgets('outside onboarding the flag is left alone', (tester) async {
+    final harness = await _pump(tester);
+
+    await _tap(tester, 'Maybe later');
+
+    expect(harness.settings.load().onboardingDone, isFalse);
   });
 
   for (final brightness in Brightness.values) {

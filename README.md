@@ -22,12 +22,14 @@ Local-first: no account, no backend, no bank linking. Your data stays on your de
 | 3 | Home, All subscriptions, Detail | ✅ Done |
 | 4 | Notifications | ✅ Done (device check pending) |
 | 5 | Cancel flow, savings, celebration | ✅ Done (device check pending) |
-| 6 | Splash, onboarding, setup | ⏳ Next |
-| 7 | Settings & backup | — |
+| 6 | Splash, onboarding, setup | ✅ Done (device check pending) |
+| 7 | Settings & backup | ⏳ Next |
 | 8 | Motion & accessibility polish | — |
 | 9 | QA & release | — |
 
-Right now the app works end to end: Home shows this month's total, the
+Right now the app works end to end. A first launch plays the animated logo, three
+onboarding slides, a setup screen (currency and reminder time) and the notification
+primer; later launches go straight to Home. Home shows this month's total, the
 yearly total, savings, trials ending soon and upcoming charges; you can add subscriptions
 and free trials from a catalog of 50 services, see each one's countdown and details,
 **Cancel now ↗** straight to the service's cancel page, and mark subscriptions cancelled,
@@ -141,6 +143,9 @@ lib/
 └── features/
     ├── catalog/                    # service catalog: entity, ranked search, JSON loader,
     │                               # providers, picker sheet (screen 06)
+    ├── splash/                     # animated logo splash (01): pure timeline + screen
+    ├── onboarding/                 # slides (02) with Flutter illustrations, setup (04),
+    │                               # onboarding controller
     ├── home/                       # Home screen (05): totals, trials, upcoming, empty state
     ├── savings/                    # cancellation stats + copy, celebration sheet (10),
     │                               # Cancelled-tab savings card
@@ -159,7 +164,7 @@ lib/
 assets/
 ├── catalog/services.json           # 50 services: name, category, brand colour, cancel link
 ├── fonts/                          # Plus Jakarta Sans 400–800 + OFL.txt
-├── brand/                          # logo / icon sources (not bundled; Phase 6 input)
+├── brand/                          # logo / icon sources (not bundled)
 ├── logos/                          # optional service logos: <key>.svg (bundled)
 └── LOGOS.md                        # logo rules + source register (not bundled)
 
@@ -240,6 +245,15 @@ features/<feature>/
 - **Permission** is asked in context (Home banner → permission screen), never on launch.
 - Debug builds: Settings → Data Inspector → **Reminders** shows permission, pending count,
   the next 20 planned reminders, **Sync now** and **Fire test in 10 s**.
+
+## App icon & launch
+
+The launcher icon and the system splash are hand-written Android resources (no
+`flutter_launcher_icons` / `flutter_native_splash`): an adaptive icon with a vector
+foreground and a monochrome layer for Android 13 themed icons, legacy PNGs for Android
+7.x, and the Android 12+ splash showing the same mark the Flutter splash animates. The
+animated splash plays in full on first launch, a 0.5 s version afterwards, a 200 ms fade
+with reduce motion, and is skipped when a notification opens the app.
 
 ## Service catalog
 

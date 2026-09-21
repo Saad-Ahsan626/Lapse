@@ -23,4 +23,4 @@ Future<NotificationLaunch?> bootstrapReminders(
 }
 
 String initialLocationFor(NotificationLaunch? launch) =>
-    launch == null ? Routes.home : Routes.detail(launch.tap.subscriptionId);
+    launch == null ? Routes.splash : Routes.detail(launch.tap.subscriptionId);

@@ -2,9 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:lapse/app/router/routes.dart';
 import 'package:lapse/core/providers/clock_providers.dart';
 import 'package:lapse/core/theme/theme.dart';
 import 'package:lapse/core/widgets/widgets.dart';
+import 'package:lapse/features/onboarding/presentation/providers/onboarding_controller.dart';
 import 'package:lapse/features/reminders/application/reminder_providers.dart';
 import 'package:lapse/features/reminders/data/reminder_permission.dart';
 import 'package:lapse/features/reminders/data/system_settings.dart';
@@ -13,7 +16,9 @@ import 'package:lapse/features/reminders/presentation/widgets/notification_previ
 import 'package:lapse/features/settings/presentation/providers/settings_providers.dart';
 
 class ReminderPermissionScreen extends ConsumerStatefulWidget {
-  const ReminderPermissionScreen({super.key});
+  const ReminderPermissionScreen({this.inOnboarding = false, super.key});
+
+  final bool inOnboarding;
 
   static const title = 'One nudge is all it takes';
   static const body =
@@ -72,6 +77,8 @@ class _ReminderPermissionScreenState
     if (!mounted) return;
     if (result == ReminderPermission.granted) {
       _finish(announce: true);
+    } else if (widget.inOnboarding) {
+      _finish(announce: false);
     } else {
       setState(() => _denied = true);
     }
@@ -101,14 +108,28 @@ class _ReminderPermissionScreenState
     if (_closed) return;
     _closed = true;
     final messenger = ScaffoldMessenger.maybeOf(context);
-    unawaited(Navigator.of(context).maybePop());
-    if (announce) {
+    void announceGranted() {
+      if (!announce) return;
       messenger?.showSnackBar(
         const SnackBar(
           content: Text(ReminderPermissionScreen.grantedMessage),
         ),
       );
     }
+
+    if (widget.inOnboarding) {
+      unawaited(_finishOnboarding(announceGranted));
+      return;
+    }
+    unawaited(Navigator.of(context).maybePop());
+    announceGranted();
+  }
+
+  Future<void> _finishOnboarding(VoidCallback announce) async {
+    final router = GoRouter.of(context);
+    await ref.read(onboardingControllerProvider.notifier).finish();
+    router.go(Routes.home);
+    announce();
   }
 
   @override

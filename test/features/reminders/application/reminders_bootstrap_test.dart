@@ -5,8 +5,11 @@ import 'package:lapse/app/router/routes.dart';
 import 'package:lapse/features/reminders/application/reminders_bootstrap.dart';
 import 'package:lapse/features/reminders/data/notification_launch.dart';
 import 'package:lapse/features/reminders/data/notification_tap.dart';
+import 'package:lapse/features/settings/domain/entities/app_settings.dart';
+import 'package:lapse/features/settings/presentation/providers/settings_providers.dart';
 
 import '../../../helpers/fake_notification_gateway.dart';
+import '../../../helpers/in_memory_settings_repository.dart';
 import 'reminder_test_support.dart';
 
 class _BrokenGateway extends FakeNotificationGateway {
@@ -21,8 +24,8 @@ void main() {
     NotificationTap(subscriptionId: 'sub-7', action: NotificationAction.open),
   );
 
-  test('initial location is Home without a launch tap', () {
-    expect(initialLocationFor(null), Routes.home);
+  test('initial location is the splash without a launch tap', () {
+    expect(initialLocationFor(null), Routes.splash);
   });
 
   test('initial location is the tapped detail on a cold start', () {
@@ -50,6 +53,11 @@ void main() {
   test('the router starts at the initial location', () {
     final container = ProviderContainer(
       overrides: [
+        settingsRepositoryProvider.overrideWithValue(
+          InMemorySettingsRepository(
+            AppSettings(defaultCurrency: 'PKR', onboardingDone: true),
+          ),
+        ),
         initialLocationProvider.overrideWithValue(initialLocationFor(launch)),
       ],
     );
@@ -63,13 +71,19 @@ void main() {
     );
   });
 
-  test('the router starts at Home by default', () {
-    final container = ProviderContainer();
+  test('the router starts at the splash by default', () {
+    final container = ProviderContainer(
+      overrides: [
+        settingsRepositoryProvider.overrideWithValue(
+          InMemorySettingsRepository(),
+        ),
+      ],
+    );
     addTearDown(container.dispose);
 
     expect(
       container.read(appRouterProvider).routeInformationProvider.value.uri.path,
-      Routes.home,
+      Routes.splash,
     );
   });
 }

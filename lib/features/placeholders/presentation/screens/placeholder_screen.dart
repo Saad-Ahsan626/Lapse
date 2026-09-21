@@ -21,10 +21,7 @@ class PlaceholderScreen extends StatelessWidget {
   final bool showDebugLinks;
 
   static const _placeholderLinks = <(String, String)>[
-    ('Splash', Routes.splash),
-    ('Onboarding', Routes.onboarding),
-    ('Permission', Routes.permission),
-    ('Setup', Routes.setup),
+    ('Replay splash', Routes.splash),
   ];
 
   @override

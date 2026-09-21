@@ -9,11 +9,13 @@ class LapseLogoPainter extends CustomPainter {
     required this.color,
     this.arcFraction = 1 - RingGeometry.logoGapFraction,
     this.checkProgress = 1,
+    this.rotation = 0,
   });
 
   final Color color;
   final double arcFraction;
   final double checkProgress;
+  final double rotation;
 
   static const _unit = 48.0;
   static const _radius = 19.0;
@@ -33,7 +35,7 @@ class LapseLogoPainter extends CustomPainter {
       );
       canvas.drawArc(
         rect,
-        RingGeometry.startAngle(RingGeometry.logoGapFraction),
+        RingGeometry.startAngle(RingGeometry.logoGapFraction) + rotation,
         2 * math.pi * arcFraction.clamp(0, 1),
         false,
         paint,
@@ -57,5 +59,6 @@ class LapseLogoPainter extends CustomPainter {
   bool shouldRepaint(LapseLogoPainter old) =>
       old.color != color ||
       old.arcFraction != arcFraction ||
-      old.checkProgress != checkProgress;
+      old.checkProgress != checkProgress ||
+      old.rotation != rotation;
 }
