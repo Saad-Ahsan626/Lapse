@@ -62,8 +62,8 @@ class _UrgencyChipState extends State<UrgencyChip>
     final ringColor = lapse.colors.urgent;
 
     final chip = Container(
-      height: Sizes.chipSmall,
-      padding: const EdgeInsets.symmetric(horizontal: 11),
+      constraints: const BoxConstraints(minHeight: Sizes.chipSmall),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 4),
       decoration: BoxDecoration(
         color: style.background,
         borderRadius: BorderRadius.circular(Radii.chipSmall),
@@ -77,10 +77,13 @@ class _UrgencyChipState extends State<UrgencyChip>
             decoration: BoxDecoration(color: style.dot, shape: BoxShape.circle),
           ),
           const SizedBox(width: 6),
-          Text(
-            widget.label,
-            maxLines: 1,
-            style: lapse.text.chipSmall.copyWith(color: style.foreground),
+          Flexible(
+            child: Text(
+              widget.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: lapse.text.chipSmall.copyWith(color: style.foreground),
+            ),
           ),
         ],
       ),

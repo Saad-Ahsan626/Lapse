@@ -1,70 +1,58 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lapse/core/widgets/widgets.dart';
-import 'package:lapse/features/catalog/presentation/widgets/catalog_picker_sheet.dart';
+import 'package:go_router/go_router.dart';
+import 'package:lapse/core/theme/app_theme.dart';
 import 'package:lapse/features/placeholders/presentation/screens/placeholder_screen.dart';
 
-import '../../../catalog/presentation/catalog_picker_harness.dart';
-
 void main() {
-  const home = PlaceholderScreen(
-    title: 'Home',
-    designRef: '05',
-    phase: 3,
-    showRouteLinks: true,
-  );
-
-  bool fabOpen(WidgetTester tester) =>
-      tester.widget<LapseFab>(find.byType(LapseFab)).open;
-
-  testWidgets('home placeholder shows a closed FAB', (tester) async {
-    await pumpPickerApp(tester, home: home);
-
-    expect(find.byType(LapseFab), findsOneWidget);
-    expect(fabOpen(tester), isFalse);
-  });
-
-  testWidgets('other placeholders have no FAB', (tester) async {
-    await pumpPickerApp(
-      tester,
-      home: const PlaceholderScreen(
-        title: 'Settings',
-        designRef: '11',
-        phase: 7,
-      ),
+  Future<List<String>> pumpPlaceholder(
+    WidgetTester tester, {
+    required bool showDebugLinks,
+  }) async {
+    final visited = <String>[];
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, _) => PlaceholderScreen(
+            title: 'Settings',
+            designRef: '11',
+            phase: 7,
+            showDebugLinks: showDebugLinks,
+          ),
+        ),
+        GoRoute(
+          path: '/debug/:page',
+          builder: (_, state) {
+            visited.add(state.uri.path);
+            return const SizedBox();
+          },
+        ),
+      ],
     );
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
+    );
+    return visited;
+  }
 
-    expect(find.byType(LapseFab), findsNothing);
+  testWidgets('shows the screen name and phase', (tester) async {
+    await pumpPlaceholder(tester, showDebugLinks: false);
+
+    expect(find.text('Settings'), findsOneWidget);
+    expect(find.text('DESIGN SCREEN 11 · PHASE 7'), findsOneWidget);
+    expect(find.text('Open design gallery'), findsNothing);
   });
 
-  testWidgets('FAB opens the picker and is open while it is up', (
+  testWidgets('debug links open the gallery and the inspector', (
     tester,
   ) async {
-    await pumpPickerApp(tester, home: home);
+    final visited = await pumpPlaceholder(tester, showDebugLinks: true);
 
-    await tester.tap(find.byType(LapseFab));
-    await settle(tester);
+    await tester.tap(find.text('Open data inspector'));
+    await tester.pumpAndSettle();
 
-    expect(find.byType(CatalogPickerSheet), findsOneWidget);
-    expect(fabOpen(tester), isTrue);
-
-    await tester.tap(find.bySemanticsLabel('Close'));
-    await settle(tester);
-
-    expect(find.byType(CatalogPickerSheet), findsNothing);
-    expect(fabOpen(tester), isFalse);
-  });
-
-  testWidgets('choosing a service navigates and resets the FAB', (
-    tester,
-  ) async {
-    final visited = await pumpPickerApp(tester, home: home);
-
-    await tester.tap(find.byType(LapseFab));
-    await settle(tester);
-    await tester.tap(find.text('Netflix'));
-    await settle(tester);
-
-    expect(visited.last.toString(), '/subscription/new?service=netflix');
-    expect(find.text('New subscription form'), findsOneWidget);
+    expect(visited, ['/debug/data']);
   });
 }

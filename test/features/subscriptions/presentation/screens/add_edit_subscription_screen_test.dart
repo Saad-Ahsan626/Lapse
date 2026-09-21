@@ -1,5 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:lapse/app/router/routes.dart';
+import 'package:lapse/core/theme/app_theme.dart';
 import 'package:lapse/core/widgets/widgets.dart';
 import 'package:lapse/features/subscriptions/presentation/form/subscription_form_args.dart';
 import 'package:lapse/features/subscriptions/presentation/screens/add_edit_subscription_screen.dart';
@@ -128,7 +134,66 @@ void main() {
     expect(repository.subscriptions, isEmpty);
   });
 
-  testWidgets('saving a new subscription pops and offers undo', (
+  testWidgets('saving a new subscription lands on its detail with undo', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(400, 1800));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: Routes.home,
+          builder: (_, _) => const Scaffold(body: Text('home')),
+        ),
+        GoRoute(
+          path: Routes.newSubscription,
+          builder: (_, _) => const AddEditSubscriptionScreen(
+            args: SubscriptionFormArgs(serviceKey: 'netflix'),
+          ),
+        ),
+        GoRoute(
+          path: '/subscription/:id',
+          builder: (_, state) =>
+              Scaffold(body: Text('detail ${state.pathParameters['id']}')),
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: formOverrides(repository),
+        child: MaterialApp.router(
+          theme: AppTheme.light(),
+          routerConfig: router,
+        ),
+      ),
+    );
+    await tester.pump();
+    unawaited(router.push<void>(Routes.newSubscription));
+    await settle(tester);
+
+    await tester.enterText(priceField(), '649');
+    await tester.pump();
+    await tester.tap(find.widgetWithText(LapseButton, 'Save'));
+    await settle(tester);
+
+    expect(find.byType(AddEditSubscriptionScreen), findsNothing);
+    expect(repository.subscriptions, hasLength(1));
+    final id = repository.subscriptions.keys.single;
+    expect(router.state.uri.toString(), Routes.detail(id));
+    expect(find.text('detail $id'), findsOneWidget);
+    expect(find.text('Netflix added'), findsOneWidget);
+
+    await tester.tap(find.text('Undo'));
+    await settle(tester);
+    expect(repository.subscriptions, isEmpty);
+
+    router.pop();
+    await settle(tester);
+    expect(find.text('home'), findsOneWidget);
+  });
+
+  testWidgets('saving a new subscription without a router pops', (
     tester,
   ) async {
     await pumpScreen(
@@ -145,10 +210,22 @@ void main() {
     expect(find.byType(AddEditSubscriptionScreen), findsNothing);
     expect(find.text('Netflix added'), findsOneWidget);
     expect(repository.subscriptions, hasLength(1));
+  });
 
-    await tester.tap(find.text('Undo'));
+  testWidgets('saving an edit pops without a snackbar', (tester) async {
+    repository.seed([subscriptionFixture()]);
+    await pumpScreen(
+      tester,
+      const SubscriptionFormArgs.edit('sub-1'),
+      pushed: true,
+    );
+
+    await tester.tap(find.widgetWithText(LapseButton, 'Save'));
     await settle(tester);
-    expect(repository.subscriptions, isEmpty);
+
+    expect(find.byType(AddEditSubscriptionScreen), findsNothing);
+    expect(find.text('open'), findsOneWidget);
+    expect(find.textContaining('added'), findsNothing);
   });
 
   testWidgets('edit screen is prefilled', (tester) async {

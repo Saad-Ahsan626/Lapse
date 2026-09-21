@@ -5,9 +5,13 @@ import 'package:go_router/go_router.dart';
 import 'package:lapse/app/router/routes.dart';
 import 'package:lapse/features/debug/presentation/screens/data_inspector_screen.dart';
 import 'package:lapse/features/debug/presentation/screens/design_gallery_screen.dart';
+import 'package:lapse/features/home/presentation/screens/home_screen.dart';
 import 'package:lapse/features/placeholders/presentation/screens/placeholder_screen.dart';
 import 'package:lapse/features/subscriptions/presentation/form/subscription_form_args.dart';
+import 'package:lapse/features/subscriptions/presentation/providers/subscription_tab.dart';
 import 'package:lapse/features/subscriptions/presentation/screens/add_edit_subscription_screen.dart';
+import 'package:lapse/features/subscriptions/presentation/screens/all_subscriptions_screen.dart';
+import 'package:lapse/features/subscriptions/presentation/screens/subscription_detail_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(
@@ -50,21 +54,11 @@ final List<RouteBase> _routes = [
       ),
     ],
   ),
-  GoRoute(
-    path: Routes.home,
-    builder: (_, _) => const PlaceholderScreen(
-      title: 'Home',
-      designRef: '05',
-      phase: 3,
-      showRouteLinks: true,
-    ),
-  ),
+  GoRoute(path: Routes.home, builder: (_, _) => const HomeScreen()),
   GoRoute(
     path: Routes.subscriptions,
-    builder: (_, _) => const PlaceholderScreen(
-      title: 'All subscriptions',
-      designRef: '09',
-      phase: 3,
+    builder: (_, state) => AllSubscriptionsScreen(
+      initialTab: SubscriptionTab.fromQuery(_queryValue(state, 'tab')),
     ),
   ),
   GoRoute(
@@ -78,11 +72,8 @@ final List<RouteBase> _routes = [
   ),
   GoRoute(
     path: '/subscription/:id',
-    builder: (_, state) => PlaceholderScreen(
-      title: 'Subscription ${state.pathParameters['id']}',
-      designRef: '08',
-      phase: 3,
-    ),
+    builder: (_, state) =>
+        SubscriptionDetailScreen(id: state.pathParameters['id']!),
     routes: [
       GoRoute(
         path: 'edit',
@@ -94,8 +85,12 @@ final List<RouteBase> _routes = [
   ),
   GoRoute(
     path: Routes.settings,
-    builder: (_, _) =>
-        const PlaceholderScreen(title: 'Settings', designRef: '11', phase: 7),
+    builder: (_, _) => const PlaceholderScreen(
+      title: 'Settings',
+      designRef: '11',
+      phase: 7,
+      showDebugLinks: true,
+    ),
   ),
   if (kDebugMode) ...[
     GoRoute(

@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:lapse/app/router/routes.dart';
 import 'package:lapse/core/providers/clock_providers.dart';
 import 'package:lapse/core/theme/theme.dart';
 import 'package:lapse/core/widgets/widgets.dart';
@@ -96,6 +98,7 @@ class _AddEditSubscriptionScreenState
     FocusScope.of(context).unfocus();
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
+    final router = GoRouter.maybeOf(context);
     final delete = ref.read(deleteSubscriptionProvider);
     final isNew = !_args.isEdit;
     final form = _form;
@@ -103,7 +106,11 @@ class _AddEditSubscriptionScreenState
       final saved = await form.save();
       if (saved == null || !mounted) return;
       setState(() => _leaving = true);
-      navigator.pop();
+      if (isNew && router != null) {
+        unawaited(router.pushReplacement<void>(Routes.detail(saved.id)));
+      } else {
+        navigator.pop();
+      }
       if (!isNew) return;
       messenger
         ..hideCurrentSnackBar()

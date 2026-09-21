@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:lapse/core/domain/calendar_date.dart';
 import 'package:lapse/features/subscriptions/domain/entities/charge.dart';
 import 'package:lapse/features/subscriptions/domain/entities/subscription.dart';
 import 'package:lapse/features/subscriptions/domain/repositories/subscription_repository.dart';
@@ -53,6 +54,16 @@ class FakeSubscriptionRepository implements SubscriptionRepository {
   @override
   Future<List<Charge>> chargesFor(String subscriptionId) async =>
       charges.where((c) => c.subscriptionId == subscriptionId).toList();
+
+  @override
+  Future<List<Charge>> chargesBetween(
+    CalendarDate from,
+    CalendarDate to,
+  ) async =>
+      charges
+          .where((c) => !c.chargedOn.isBefore(from) && !c.chargedOn.isAfter(to))
+          .toList()
+        ..sort((a, b) => a.chargedOn.compareTo(b.chargedOn));
 
   @override
   Future<void> applyRollOver(Subscription updated, List<Charge> added) async {

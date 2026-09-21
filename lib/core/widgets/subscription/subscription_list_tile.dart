@@ -35,6 +35,8 @@ class SubscriptionListTile extends StatelessWidget {
   final Object? heroTag;
   final VoidCallback? onTap;
 
+  static const chipWidthFactor = 0.42;
+
   @override
   Widget build(BuildContext context) {
     final text = context.lapse.text;
@@ -44,49 +46,56 @@ class SubscriptionListTile extends StatelessWidget {
       excludeSemantics: true,
       child: LapseCard(
         onTap: onTap,
-        child: Row(
-          children: [
-            ServiceTile(
-              name: name,
-              initials: initials,
-              brandColor: brandColor,
-              logoAsset: logoAsset,
-              heroTag: heroTag,
-            ),
-            const SizedBox(width: Space.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          name,
-                          style: text.itemTitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (isTrial) ...[
-                        const SizedBox(width: Space.sm),
-                        const TrialBadge(),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    meta,
-                    style: text.meta,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+        child: LayoutBuilder(
+          builder: (context, constraints) => Row(
+            children: [
+              ServiceTile(
+                name: name,
+                initials: initials,
+                brandColor: brandColor,
+                logoAsset: logoAsset,
+                heroTag: heroTag,
               ),
-            ),
-            const SizedBox(width: Space.sm),
-            UrgencyChip(label: dueLabel, urgency: urgency),
-          ],
+              const SizedBox(width: Space.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            name,
+                            style: text.itemTitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (isTrial) ...[
+                          const SizedBox(width: Space.sm),
+                          const TrialBadge(),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      meta,
+                      style: text.meta,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: Space.sm),
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: constraints.maxWidth * chipWidthFactor,
+                ),
+                child: UrgencyChip(label: dueLabel, urgency: urgency),
+              ),
+            ],
+          ),
         ),
       ),
     );

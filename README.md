@@ -19,18 +19,19 @@ Local-first: no account, no backend, no bank linking. Your data stays on your de
 | 0 | Foundation & design system | ✅ Done |
 | 1 | Domain & data layer (models, SQLite, billing engine) | ✅ Done |
 | 2 | Catalog & Add / Edit | ✅ Done |
-| 3 | Home, All subscriptions, Detail | ⏳ Next |
-| 4 | Notifications | — |
+| 3 | Home, All subscriptions, Detail | ✅ Done |
+| 4 | Notifications | ⏳ Next |
 | 5 | Cancel flow, savings, celebration | — |
 | 6 | Splash, onboarding, setup | — |
 | 7 | Settings & backup | — |
 | 8 | Motion & accessibility polish | — |
 | 9 | QA & release | — |
 
-Right now you can add subscriptions and free trials from a catalog of 50 services (or
-as custom ones) and edit them. Home, the subscription list and the detail screen are
-still placeholders; saved data shows in the debug **Data Inspector**. The **Design
-Gallery** shows every design-system widget.
+Right now the app works end to end without reminders: Home shows this month's total, the
+yearly total, savings, trials ending soon and upcoming charges; you can add subscriptions
+and free trials from a catalog of 50 services, see each one's countdown and details,
+**Cancel now ↗** straight to the service's cancel page, and mark subscriptions cancelled,
+restore or delete them. Reminder notifications come in Phase 4.
 
 ## MVP features
 
@@ -52,6 +53,7 @@ Gallery** shows every design-system widget.
 | Routing | `go_router` |
 | Database | `sqflite` (hand-written SQL) |
 | Formatting | `intl` (money grouping, dates) |
+| Links | `url_launcher` (Cancel now ↗) |
 | Settings | `shared_preferences` |
 | IDs | `uuid` |
 | Vector assets | `flutter_svg` (bundled service logos) |
@@ -86,7 +88,7 @@ Requirements: Flutter 3.41+ (stable), Android SDK, JDK 17+. Minimum Android vers
 
 ### Design Gallery (debug builds only)
 
-Home shows an **Open design gallery** button in debug builds. The gallery renders every
+Open **Settings** (the sliders button on Home) in a debug build for **Open design gallery**. The gallery renders every
 design-system widget (colours, type scale, spacing, buttons, chips, inputs, rings, tiles,
 brand, empty state) with:
 
@@ -98,7 +100,7 @@ Use it to compare the widgets against the design file side by side.
 
 ### Data Inspector (debug builds only)
 
-Home also shows **Open data inspector**. It works on the real database:
+Settings also shows **Open data inspector**. It works on the real database:
 
 - **Seed sample data**: 8 subscriptions (monthly, yearly, custom, a trial, one overdue,
   one cancelled)
@@ -135,11 +137,13 @@ lib/
 └── features/
     ├── catalog/                    # service catalog: entity, ranked search, JSON loader,
     │                               # providers, picker sheet (screen 06)
+    ├── home/                       # Home screen (05): totals, trials, upcoming, empty state
     ├── subscriptions/
     │   ├── domain/                 # entities, repository interface, BillingEngine,
     │   │                           # validator, use cases (pure Dart)
     │   ├── data/                   # SQLite data source, mappers, repository
-    │   └── presentation/           # providers, form controller, add/edit screen (07)
+    │   └── presentation/           # providers, form, actions, labels, links; screens:
+    │                               # add/edit (07), detail (08), all subscriptions (09)
     ├── settings/                   # AppSettings, repository over shared_preferences
     ├── debug/                      # Design Gallery, Data Inspector
     └── placeholders/               # stand-in screens until each phase lands
@@ -198,6 +202,18 @@ features/<feature>/
 | Surface | `#FFFFFF` | `#16161F` |
 
 ---
+
+## How the totals work
+
+- **This month:** charges already logged this calendar month plus charges still due before
+  the month ends, for active subscriptions **including free trials** (their first charge is
+  money at risk). Only the default currency is added up.
+- **Per year:** the yearly cost of every active subscription (weekly × 52, monthly × 12,
+  quarterly × 4, custom every N days × 365 / N).
+- **Saved:** the yearly cost of everything you've cancelled.
+- **Other currencies** are listed separately under the totals (no exchange rates).
+- Charges whose date has passed are logged automatically when the app starts or comes back
+  to the foreground, and the next date moves forward.
 
 ## Service catalog
 

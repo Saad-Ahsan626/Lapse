@@ -10,6 +10,7 @@ import 'package:lapse/features/debug/presentation/widgets/sections/empty_state_s
 import 'package:lapse/features/debug/presentation/widgets/sections/form_controls_section.dart';
 import 'package:lapse/features/debug/presentation/widgets/sections/hero_card_section.dart';
 import 'package:lapse/features/debug/presentation/widgets/sections/inputs_section.dart';
+import 'package:lapse/features/debug/presentation/widgets/sections/lists_motion_section.dart';
 import 'package:lapse/features/debug/presentation/widgets/sections/rings_section.dart';
 import 'package:lapse/features/debug/presentation/widgets/sections/spacing_section.dart';
 import 'package:lapse/features/debug/presentation/widgets/sections/tiles_section.dart';
@@ -70,6 +71,7 @@ class _DesignGalleryScreenState extends State<DesignGalleryScreen> {
             const HeroCardSection(),
             const BrandSection(),
             const EmptyStateSection(),
+            const ListsMotionSection(),
           ],
         ),
       ),

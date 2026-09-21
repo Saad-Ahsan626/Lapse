@@ -44,6 +44,14 @@ class SubscriptionLocalDataSource {
         orderBy: 'charged_on ASC',
       );
 
+  Future<List<Map<String, Object?>>> chargesBetween(String from, String to) =>
+      _db.query(
+        Tables.charges,
+        where: 'charged_on BETWEEN ? AND ?',
+        whereArgs: [from, to],
+        orderBy: 'charged_on ASC, id ASC',
+      );
+
   Future<void> insertCharges(List<Map<String, Object?>> rows) async {
     for (final row in rows) {
       await _db.insert(Tables.charges, row);

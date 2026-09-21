@@ -23,6 +23,9 @@ class TrialBadge extends StatelessWidget {
           widthFactor: 1,
           child: Text(
             'TRIAL',
+            textScaler: MediaQuery.textScalerOf(
+              context,
+            ).clamp(maxScaleFactor: 1.5),
             style: lapse.text.badge.copyWith(color: lapse.colors.onTrial),
           ),
         ),

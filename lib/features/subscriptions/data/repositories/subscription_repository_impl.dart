@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:lapse/core/domain/calendar_date.dart';
 import 'package:lapse/features/subscriptions/data/datasources/subscription_local_data_source.dart';
 import 'package:lapse/features/subscriptions/data/mappers/charge_mapper.dart';
 import 'package:lapse/features/subscriptions/data/mappers/subscription_mapper.dart';
@@ -49,6 +50,15 @@ class SubscriptionRepositoryImpl implements SubscriptionRepository {
   @override
   Future<List<Charge>> chargesFor(String subscriptionId) async {
     final rows = await _source.charges(subscriptionId);
+    return rows.map(ChargeMapper.fromRow).toList();
+  }
+
+  @override
+  Future<List<Charge>> chargesBetween(
+    CalendarDate from,
+    CalendarDate to,
+  ) async {
+    final rows = await _source.chargesBetween(from.toIso(), to.toIso());
     return rows.map(ChargeMapper.fromRow).toList();
   }
 

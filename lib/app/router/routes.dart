@@ -6,6 +6,8 @@ abstract final class Routes {
 
   static const home = '/';
   static const subscriptions = '/subscriptions';
+  static String subscriptionsTab(String tab) =>
+      Uri(path: subscriptions, queryParameters: {'tab': tab}).toString();
   static const newSubscription = '/subscription/new';
   static String newSubscriptionFor({String? serviceKey, String? name}) => Uri(
     path: newSubscription,

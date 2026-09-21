@@ -31,12 +31,21 @@ void main() {
     await db.close();
   });
 
-  Future<List<String>> names(
+  Future<void> expectNames(
     ProviderListenable<AsyncValue<List<Subscription>>> provider,
+    Object expected,
   ) async {
-    await container.read(subscriptionsProvider.future);
-    await pumpEventQueue();
-    return container.read(provider).requireValue.map((s) => s.name).toList();
+    final matcher = wrapMatcher(expected);
+    var current = <String>[];
+    for (var attempt = 0; attempt < 200; attempt++) {
+      final value = container.read(provider);
+      if (value.hasValue) {
+        current = value.requireValue.map((s) => s.name).toList();
+        if (matcher.matches(current, {})) break;
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+    }
+    expect(current, expected);
   }
 
   test('lists split into active, trials and cancelled', () async {
@@ -54,14 +63,14 @@ void main() {
       ),
     );
 
-    expect(await names(activeSubscriptionsProvider), ['Spotify Premium']);
-    expect(await names(trialSubscriptionsProvider), ['Netflix']);
-    expect(await names(cancelledSubscriptionsProvider), isEmpty);
+    await expectNames(activeSubscriptionsProvider, ['Spotify Premium']);
+    await expectNames(trialSubscriptionsProvider, ['Netflix']);
+    await expectNames(cancelledSubscriptionsProvider, isEmpty);
 
     await container.read(markCancelledProvider)(spotify.id);
 
-    expect(await names(activeSubscriptionsProvider), isEmpty);
-    expect(await names(cancelledSubscriptionsProvider), ['Spotify Premium']);
+    await expectNames(activeSubscriptionsProvider, isEmpty);
+    await expectNames(cancelledSubscriptionsProvider, ['Spotify Premium']);
   });
 
   test('clock offset moves today', () {
