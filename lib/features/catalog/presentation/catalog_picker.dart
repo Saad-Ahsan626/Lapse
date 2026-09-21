@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lapse/core/motion/motion.dart';
 import 'package:lapse/core/widgets/widgets.dart';
 import 'package:lapse/features/catalog/presentation/providers/catalog_providers.dart';
 import 'package:lapse/features/catalog/presentation/widgets/catalog_picker_sheet.dart';
@@ -17,6 +18,8 @@ Future<void> showCatalogPicker(BuildContext context) async {
     context: context,
     title: 'Add subscription',
     maxHeightFactor: 0.9,
+    duration: Motion.spring,
+    curve: Motion.springCurve,
     builder: (_) => const CatalogPickerSheet(),
   );
   if (location != null && router != null) {

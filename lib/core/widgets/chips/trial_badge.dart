@@ -16,7 +16,7 @@ class TrialBadge extends StatelessWidget {
         height: Sizes.badge,
         padding: const EdgeInsets.symmetric(horizontal: 9),
         decoration: BoxDecoration(
-          color: lapse.colors.trial,
+          color: lapse.colors.trialStrong,
           borderRadius: BorderRadius.circular(Radii.badge),
         ),
         child: Center(

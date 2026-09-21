@@ -9,11 +9,13 @@ class StaggeredEntrance extends StatefulWidget {
   const StaggeredEntrance({
     required this.index,
     required this.child,
+    this.animate = true,
     super.key,
   });
 
   final int index;
   final Widget child;
+  final bool animate;
 
   static const double offset = 12;
   static const int maxSteps = 8;
@@ -47,7 +49,7 @@ class _StaggeredEntranceState extends State<StaggeredEntrance>
     super.didChangeDependencies();
     if (_started) return;
     _started = true;
-    if (reduceMotion(context)) {
+    if (!widget.animate || reduceMotion(context)) {
       _controller.value = 1;
     } else {
       unawaited(_controller.forward());

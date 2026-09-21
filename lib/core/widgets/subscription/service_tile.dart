@@ -99,7 +99,33 @@ class ServiceTile extends StatelessWidget {
       ),
     );
 
-    if (heroTag != null) tile = Hero(tag: heroTag!, child: tile);
+    if (heroTag != null) {
+      tile = Hero(
+        tag: heroTag!,
+        createRectTween: _rectTween,
+        flightShuttleBuilder: _shuttle,
+        child: tile,
+      );
+    }
     return tile;
   }
+
+  static RectTween _rectTween(Rect? begin, Rect? end) =>
+      RectTween(begin: begin, end: end);
+
+  Widget _shuttle(
+    BuildContext flightContext,
+    Animation<double> animation,
+    HeroFlightDirection direction,
+    BuildContext fromHeroContext,
+    BuildContext toHeroContext,
+  ) => LayoutBuilder(
+    builder: (context, constraints) => ServiceTile(
+      name: name,
+      initials: initials,
+      brandColor: brandColor,
+      logoAsset: logoAsset,
+      size: constraints.biggest.shortestSide,
+    ),
+  );
 }

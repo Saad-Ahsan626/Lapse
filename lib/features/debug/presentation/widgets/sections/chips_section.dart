@@ -62,7 +62,10 @@ class _ChipsSectionState extends State<ChipsSection> {
               UrgencyChip(label: 'In 3 days', urgency: Urgency.warning),
               UrgencyChip(label: 'Oct 24', urgency: Urgency.normal),
               TrialBadge(),
-              SavingsPill(label: 'Saved Rs 7,788 🎉'),
+              SavingsPill(
+                label: 'Saved Rs 7,788 🎉',
+                semanticLabel: 'Saved Rs 7,788',
+              ),
             ],
           ),
         ],

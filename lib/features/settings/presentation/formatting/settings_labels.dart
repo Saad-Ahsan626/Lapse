@@ -27,3 +27,6 @@ String reminderTimeLabel(int minutes) {
 String reminderMomentLabel(DateTime fireAt) =>
     '${dayDateLabel(CalendarDate.fromDateTime(fireAt))} · '
     '${reminderTimeLabel(fireAt.hour * 60 + fireAt.minute)}';
+
+String reminderTimeSavedMessage(int minutes) =>
+    'Reminder time saved, ${reminderTimeLabel(minutes)}';

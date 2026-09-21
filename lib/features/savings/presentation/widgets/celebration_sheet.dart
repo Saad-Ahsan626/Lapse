@@ -60,7 +60,7 @@ class CelebrationSheet extends StatelessWidget {
                           formatMoney(Money(minor, saved.currency)),
                       textAlign: TextAlign.center,
                       style: text.moneyHero.copyWith(
-                        color: c.savings,
+                        color: c.savingsStrong,
                         fontSize: 44,
                       ),
                     ),

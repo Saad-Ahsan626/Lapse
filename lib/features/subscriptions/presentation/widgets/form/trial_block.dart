@@ -26,6 +26,14 @@ class TrialBlock extends StatelessWidget {
   final ValueChanged<int?> onTrialLengthChanged;
   final ValueChanged<String> onPriceChanged;
 
+  static Duration get revealDuration => Motion.expand + Motion.fieldFade;
+
+  static Curve get revealCurve => Interval(
+    Motion.expand.inMicroseconds / revealDuration.inMicroseconds,
+    1,
+    curve: Curves.easeOut,
+  );
+
   @override
   Widget build(BuildContext context) {
     final lapse = context.lapse;
@@ -47,21 +55,26 @@ class TrialBlock extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _switchRow(context),
-          AnimatedSize(
-            duration: reduce ? Duration.zero : Motion.expand,
-            curve: Curves.easeOut,
-            alignment: Alignment.topCenter,
-            child: AnimatedSwitcher(
-              duration: reduce ? Duration.zero : Motion.press,
-              layoutBuilder: (current, previous) => Stack(
-                alignment: Alignment.topCenter,
-                children: [...previous, ?current],
+          if (reduce)
+            on ? _expanded(context) : const SizedBox(width: double.infinity)
+          else
+            AnimatedSize(
+              duration: Motion.expand,
+              curve: Curves.easeOut,
+              alignment: Alignment.topCenter,
+              child: AnimatedSwitcher(
+                duration: revealDuration,
+                reverseDuration: Motion.fieldFade,
+                switchInCurve: revealCurve,
+                layoutBuilder: (current, previous) => Stack(
+                  alignment: Alignment.topCenter,
+                  children: [...previous, ?current],
+                ),
+                child: on
+                    ? _expanded(context)
+                    : const SizedBox(width: double.infinity),
               ),
-              child: on
-                  ? _expanded(context)
-                  : const SizedBox(width: double.infinity),
             ),
-          ),
         ],
       ),
     );
@@ -112,7 +125,7 @@ class TrialBlock extends StatelessWidget {
           ExcludeSemantics(
             child: Text(
               'TRIAL LENGTH',
-              style: lapse.text.caption.copyWith(color: c.trial),
+              style: lapse.text.caption.copyWith(color: c.trialText),
             ),
           ),
           const SizedBox(height: Space.xs),
@@ -180,10 +193,7 @@ class TrialBlock extends StatelessWidget {
           child: ConstrainedBox(
             constraints: const BoxConstraints(minHeight: 49),
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: Space.lg,
-                vertical: Space.sm,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: Space.lg),
               child: Row(
                 children: [
                   Expanded(
@@ -217,7 +227,10 @@ class TrialBlock extends StatelessWidget {
                               maxWidth: math.max(40, constraints.maxWidth - 40),
                             ),
                             child: SizedBox(
-                              width: _inputWidth(context, valueStyle),
+                              width: math.max(
+                                Sizes.minTap,
+                                _inputWidth(context, valueStyle),
+                              ),
                               child: Semantics(
                                 label: 'Price after trial',
                                 child: TextField(
@@ -236,6 +249,9 @@ class TrialBlock extends StatelessWidget {
                                   style: valueStyle,
                                   decoration: InputDecoration(
                                     isCollapsed: true,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      vertical: 15,
+                                    ),
                                     border: InputBorder.none,
                                     hintText: '0',
                                     hintStyle: valueStyle.copyWith(

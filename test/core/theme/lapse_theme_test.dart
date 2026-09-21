@@ -38,6 +38,23 @@ void main() {
     expect(light.lerp(dark, 1).colors.primary, LapseColors.dark.primary);
   });
 
+  test('Phase 8 contrast tokens', () {
+    expect(LapseColors.light.inkSubtle, const Color(0xFF6B6B80));
+    expect(LapseColors.dark.inkSubtle, const Color(0xFF8A8AA3));
+    expect(LapseColors.light.savingsStrong, const Color(0xFF059669));
+    expect(LapseColors.dark.savingsStrong, const Color(0xFF10B981));
+    final light = LapseTheme.of(LapseColors.light);
+    final dark = LapseTheme.of(LapseColors.dark);
+    expect(
+      light.lerp(dark, 0.5).colors.savingsStrong,
+      Color.lerp(
+        LapseColors.light.savingsStrong,
+        LapseColors.dark.savingsStrong,
+        0.5,
+      ),
+    );
+  });
+
   test('money styles use tabular figures', () {
     final text = LapseTheme.of(LapseColors.light).text;
 

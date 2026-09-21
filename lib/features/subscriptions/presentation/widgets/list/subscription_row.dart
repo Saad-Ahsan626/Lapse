@@ -24,7 +24,7 @@ class SubscriptionRow extends ConsumerStatefulWidget {
   final Subscription subscription;
   final VoidCallback? onTap;
 
-  static const Duration collapseDuration = Duration(milliseconds: 260);
+  static const Duration collapseDuration = Motion.collapse;
 
   static String heroTagFor(Subscription subscription) =>
       'tile-${subscription.id}';
@@ -142,6 +142,11 @@ class _SubscriptionRowState extends ConsumerState<SubscriptionRow>
             logoAsset: hasLogo ? service?.logoAsset : null,
             heroTag: SubscriptionRow.heroTagFor(s),
             onTap: widget.onTap,
+            semanticState: cancelled ? 'cancelled' : null,
+            semanticAmount: spokenAmountLabel(s),
+            semanticWhen: cancelled
+                ? spokenCancelledLabel(s)
+                : spokenDueLabel(s, today),
           ),
         ),
       ),

@@ -34,6 +34,7 @@ abstract final class Sizes {
   static const double badge = 26;
   static const double input = 53;
   static const double fab = 56;
-  static const double minTap = 44;
+  static const double minTap = 48;
+  static const double iconButton = 44;
   static const double serviceTile = 44;
 }

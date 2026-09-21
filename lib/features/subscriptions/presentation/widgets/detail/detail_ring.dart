@@ -70,20 +70,17 @@ class DetailRing extends StatelessWidget {
       ),
     };
 
-    return Semantics(
-      label: semantics,
-      excludeSemantics: true,
-      child: CountdownRing(
-        progress: progress,
-        color: color,
-        size: size,
-        strokeRatio: strokeRatio,
-        child: MediaQuery.withClampedTextScaling(
-          maxScaleFactor: 1.3,
-          child: Padding(
-            padding: const EdgeInsets.all(size * strokeRatio * 2),
-            child: FittedBox(fit: BoxFit.scaleDown, child: centre),
-          ),
+    return CountdownRing(
+      semanticLabel: semantics,
+      progress: progress,
+      color: color,
+      size: size,
+      strokeRatio: strokeRatio,
+      child: MediaQuery.withClampedTextScaling(
+        maxScaleFactor: 1.3,
+        child: Padding(
+          padding: const EdgeInsets.all(size * strokeRatio * 2),
+          child: FittedBox(fit: BoxFit.scaleDown, child: centre),
         ),
       ),
     );

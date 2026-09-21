@@ -91,12 +91,14 @@ class _CountUpTextState extends State<CountUpText>
     return Semantics(
       label: widget.format(widget.value),
       excludeSemantics: true,
-      child: AnimatedBuilder(
-        animation: _curve,
-        builder: (context, _) => Text(
-          widget.format(instant ? widget.value : _current),
-          style: style,
-          textAlign: widget.textAlign,
+      child: RepaintBoundary(
+        child: AnimatedBuilder(
+          animation: _curve,
+          builder: (context, _) => Text(
+            widget.format(instant ? widget.value : _current),
+            style: style,
+            textAlign: widget.textAlign,
+          ),
         ),
       ),
     );

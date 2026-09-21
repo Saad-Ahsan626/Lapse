@@ -94,10 +94,12 @@ class _ConfettiBurstState extends State<ConfettiBurst>
         child: SizedBox(
           width: double.infinity,
           height: widget.height,
-          child: CustomPaint(
-            painter: _ConfettiPainter(
-              pieces: _pieces,
-              progress: _controller,
+          child: RepaintBoundary(
+            child: CustomPaint(
+              painter: _ConfettiPainter(
+                pieces: _pieces,
+                progress: _controller,
+              ),
             ),
           ),
         ),

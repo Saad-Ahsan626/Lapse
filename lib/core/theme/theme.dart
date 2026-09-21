@@ -1,4 +1,5 @@
 export 'app_theme.dart';
+export 'contrast.dart';
 export 'lapse_theme.dart';
 export 'tokens/lapse_colors.dart';
 export 'tokens/lapse_spacing.dart';

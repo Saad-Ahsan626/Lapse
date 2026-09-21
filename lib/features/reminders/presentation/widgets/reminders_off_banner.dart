@@ -137,6 +137,7 @@ class _BannerCard extends StatelessWidget {
                     button: true,
                     label: 'Dismiss',
                     excludeSemantics: true,
+                    onTap: onDismiss,
                     child: InkResponse(
                       onTap: onDismiss,
                       radius: Sizes.minTap / 2,

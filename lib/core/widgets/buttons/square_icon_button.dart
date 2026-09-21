@@ -30,25 +30,36 @@ class SquareIconButton extends StatelessWidget {
       child: Tooltip(
         message: semanticLabel,
         excludeFromSemantics: true,
-        child: PressScale(
-          enabled: onPressed != null,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              borderRadius: borderRadius,
-              boxShadow: c.cardShadow,
-            ),
-            child: Material(
-              color: c.surface,
-              shape: RoundedRectangleBorder(
-                borderRadius: borderRadius,
-                side: BorderSide(color: c.border),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: InkWell(
-                onTap: onPressed,
-                child: SizedBox.square(
-                  dimension: Sizes.minTap,
-                  child: Center(child: Icon(icon, size: 22, color: c.ink)),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onPressed,
+          child: SizedBox.square(
+            dimension: Sizes.minTap,
+            child: Center(
+              child: PressScale(
+                enabled: onPressed != null,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: borderRadius,
+                    boxShadow: c.cardShadow,
+                  ),
+                  child: Material(
+                    color: c.surface,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: borderRadius,
+                      side: BorderSide(color: c.border),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: InkWell(
+                      onTap: onPressed,
+                      child: SizedBox.square(
+                        dimension: Sizes.iconButton,
+                        child: Center(
+                          child: Icon(icon, size: 22, color: c.ink),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),

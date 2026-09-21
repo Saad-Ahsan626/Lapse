@@ -21,7 +21,6 @@ class SegmentedTabs<T> extends StatelessWidget {
 
   static const double _padding = 4;
   static const double _segmentRadius = 11;
-  static const Duration _slide = Duration(milliseconds: 220);
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +32,7 @@ class SegmentedTabs<T> extends StatelessWidget {
 
     return Container(
       constraints: const BoxConstraints(minHeight: Sizes.minTap),
-      padding: const EdgeInsets.all(_padding),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: c.surfaceMuted,
         borderRadius: BorderRadius.circular(Radii.control),
@@ -42,9 +41,13 @@ class SegmentedTabs<T> extends StatelessWidget {
         children: [
           if (index >= 0)
             Positioned.fill(
+              left: _padding,
+              top: _padding,
+              right: _padding,
+              bottom: _padding,
               child: AnimatedAlign(
                 alignment: Alignment(x, 0),
-                duration: reduceMotion(context) ? Duration.zero : _slide,
+                duration: reduceMotion(context) ? Duration.zero : Motion.snap,
                 curve: Curves.easeOutCubic,
                 child: FractionallySizedBox(
                   widthFactor: 1 / count,
@@ -111,12 +114,13 @@ class _Segment<T> extends StatelessWidget {
         borderRadius: BorderRadius.circular(SegmentedTabs._segmentRadius),
         child: ConstrainedBox(
           constraints: const BoxConstraints(
-            minHeight: Sizes.minTap - 2 * SegmentedTabs._padding,
+            minWidth: Sizes.minTap,
+            minHeight: Sizes.minTap,
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: Space.xs,
-              vertical: Space.sm,
+              horizontal: Space.xs + SegmentedTabs._padding,
+              vertical: Space.sm + SegmentedTabs._padding,
             ),
             child: Center(
               child: Text.rich(

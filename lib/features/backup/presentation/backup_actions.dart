@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:lapse/features/backup/application/backup_service_provider.dart';
@@ -11,6 +12,9 @@ const backupSavedMessage = 'Backup saved';
 const backupSaveFailedMessage = "Couldn't save the backup";
 const backupOpenFailedMessage = "Couldn't open that file.";
 const backupImportFailedMessage = "Couldn't import the backup";
+
+String importFinishedAnnouncement(ImportResult result) =>
+    'Import finished. ${importedMessage(result)}';
 
 String importedMessage(ImportResult result) =>
     'Imported ${result.subscriptions} '
@@ -31,6 +35,8 @@ Future<void> exportBackup(BuildContext context, WidgetRef ref) async {
 
 Future<void> importBackup(BuildContext context, WidgetRef ref) async {
   final messenger = ScaffoldMessenger.of(context);
+  final view = View.of(context);
+  final direction = Directionality.of(context);
   final service = ref.read(backupServiceProvider);
   final BackupData? data;
   try {
@@ -53,6 +59,11 @@ Future<void> importBackup(BuildContext context, WidgetRef ref) async {
     return;
   }
   _show(messenger, importedMessage(result));
+  await SemanticsService.sendAnnouncement(
+    view,
+    importFinishedAnnouncement(result),
+    direction,
+  );
 }
 
 void _show(ScaffoldMessengerState messenger, String message) => messenger

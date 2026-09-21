@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:lapse/core/motion/motion.dart';
 import 'package:lapse/core/theme/lapse_theme.dart';
 import 'package:lapse/core/theme/tokens/lapse_spacing.dart';
 import 'package:lapse/core/widgets/buttons/press_scale.dart';
@@ -77,7 +78,7 @@ class LapseButton extends StatelessWidget {
         enabled: enabled,
         child: AnimatedOpacity(
           opacity: enabled || loading ? 1 : 0.4,
-          duration: const Duration(milliseconds: 150),
+          duration: Motion.pressOpacity,
           child: Material(
             color: bg,
             shape: shape,

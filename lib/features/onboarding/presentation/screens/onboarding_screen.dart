@@ -49,7 +49,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       unawaited(
         _controller.animateToPage(
           index,
-          duration: Motion.sheet,
+          duration: Motion.hero,
           curve: Motion.emphasized,
         ),
       );

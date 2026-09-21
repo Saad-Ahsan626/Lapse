@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:lapse/core/motion/motion.dart';
 import 'package:lapse/core/theme/lapse_theme.dart';
 import 'package:lapse/core/theme/tokens/lapse_spacing.dart';
 import 'package:lapse/core/theme/tokens/lapse_typography.dart';
@@ -111,7 +112,7 @@ class _LapseTextFieldState extends State<LapseTextField> {
           const SizedBox(height: Space.sm),
         ],
         AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
+          duration: Motion.pressOpacity,
           constraints: const BoxConstraints(minHeight: Sizes.input),
           padding: EdgeInsets.only(
             left: 14,

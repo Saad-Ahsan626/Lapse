@@ -25,7 +25,7 @@ class SwipeActions extends StatefulWidget {
 
   static const double openThreshold = 0.4;
   static const double flingVelocity = 365;
-  static const Duration snap = Duration(milliseconds: 220);
+  static const Duration snap = Motion.snap;
 
   @override
   State<SwipeActions> createState() => _SwipeActionsState();

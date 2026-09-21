@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:lapse/core/theme/lapse_theme.dart';
+import 'package:lapse/core/theme/tokens/lapse_spacing.dart';
 
 class SectionHeader extends StatelessWidget {
   const SectionHeader({
@@ -35,7 +36,7 @@ class SectionHeader extends StatelessWidget {
               style: TextButton.styleFrom(
                 foregroundColor: lapse.colors.primary,
                 textStyle: lapse.text.chip,
-                minimumSize: const Size(44, 44),
+                minimumSize: const Size.square(Sizes.minTap),
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),

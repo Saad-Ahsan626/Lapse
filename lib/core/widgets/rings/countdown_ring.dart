@@ -12,6 +12,7 @@ class CountdownRing extends StatelessWidget {
     this.strokeRatio = 0.1,
     this.animate = true,
     this.child,
+    this.semanticLabel,
     super.key,
   });
 
@@ -23,6 +24,7 @@ class CountdownRing extends StatelessWidget {
 
   final bool animate;
   final Widget? child;
+  final String? semanticLabel;
 
   static double clampProgress(double value) =>
       value.isNaN ? 0.03 : value.clamp(0.03, 1.0);
@@ -35,24 +37,29 @@ class CountdownRing extends StatelessWidget {
         ? Motion.ring
         : Duration.zero;
 
-    return SizedBox.square(
-      dimension: size,
-      child: TweenAnimationBuilder<double>(
-        tween: Tween(begin: 1, end: target),
-        duration: duration,
-        curve: Motion.emphasized,
-        builder: (context, value, child) => CustomPaint(
-          painter: _CountdownRingPainter(
-            progress: value,
-            color: color,
-            track: track,
-            strokeRatio: strokeRatio,
+    final ring = RepaintBoundary(
+      child: SizedBox.square(
+        dimension: size,
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(begin: 1, end: target),
+          duration: duration,
+          curve: Motion.emphasized,
+          builder: (context, value, child) => CustomPaint(
+            painter: _CountdownRingPainter(
+              progress: value,
+              color: color,
+              track: track,
+              strokeRatio: strokeRatio,
+            ),
+            child: child,
           ),
-          child: child,
+          child: child == null ? null : Center(child: child),
         ),
-        child: child == null ? null : Center(child: child),
       ),
     );
+    final label = semanticLabel;
+    if (label == null) return ring;
+    return Semantics(label: label, excludeSemantics: true, child: ring);
   }
 }
 

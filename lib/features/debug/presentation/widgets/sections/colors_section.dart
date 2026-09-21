@@ -12,7 +12,11 @@ class ColorsSection extends StatelessWidget {
     final swatches = [
       ('Primary', c.primary),
       ('Savings', c.savings),
+      ('Savings text', c.savingsText),
+      ('Savings strong', c.savingsStrong),
       ('Trial', c.trial),
+      ('Trial strong', c.trialStrong),
+      ('Trial text', c.trialText),
       ('Urgent ≤1d', c.urgent),
       ('Warning ≤3d', c.warning),
       ('Background', c.background),
@@ -27,7 +31,9 @@ class ColorsSection extends StatelessWidget {
 
     return GallerySection(
       title: 'Color',
-      note: 'Semantic roles. Urgency is never carried by colour alone.',
+      note:
+          'Semantic roles with WCAG contrast on background / surface. '
+          'Urgency is never carried by colour alone.',
       child: Wrap(
         spacing: Space.md,
         runSpacing: Space.lg,
@@ -49,6 +55,8 @@ class _Swatch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final lapse = context.lapse;
+    final onBackground = contrastRatio(color, lapse.colors.background);
+    final onSurface = contrastRatio(color, lapse.colors.surface);
     final hex = color
         .toARGB32()
         .toRadixString(16)
@@ -71,6 +79,13 @@ class _Swatch extends StatelessWidget {
           const SizedBox(height: 6),
           Text(name, style: lapse.text.meta.copyWith(color: lapse.colors.ink)),
           Text('#$hex', style: lapse.text.meta),
+          Text(
+            '${onBackground.toStringAsFixed(1)} / '
+            '${onSurface.toStringAsFixed(1)} : 1',
+            style: lapse.text.meta.copyWith(
+              fontFeatures: LapseTypography.tabular,
+            ),
+          ),
         ],
       ),
     );

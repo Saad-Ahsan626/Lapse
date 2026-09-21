@@ -92,26 +92,28 @@ class _UrgencyChipState extends State<UrgencyChip>
     return Semantics(
       label: widget.label,
       excludeSemantics: true,
-      child: AnimatedBuilder(
-        animation: _pulse,
-        child: chip,
-        builder: (context, child) {
-          final t = _pulse.value;
-          if (t < 0.8 || t > 0.9) return child!;
-          final p = (t - 0.8) / 0.1;
-          return DecoratedBox(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(Radii.chipSmall),
-              boxShadow: [
-                BoxShadow(
-                  color: ringColor.withValues(alpha: 0.45 * (1 - p)),
-                  spreadRadius: 7 * p,
-                ),
-              ],
-            ),
-            child: child,
-          );
-        },
+      child: RepaintBoundary(
+        child: AnimatedBuilder(
+          animation: _pulse,
+          child: chip,
+          builder: (context, child) {
+            final t = _pulse.value;
+            if (t < 0.8 || t > 0.9) return child!;
+            final p = (t - 0.8) / 0.1;
+            return DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(Radii.chipSmall),
+                boxShadow: [
+                  BoxShadow(
+                    color: ringColor.withValues(alpha: 0.45 * (1 - p)),
+                    spreadRadius: 7 * p,
+                  ),
+                ],
+              ),
+              child: child,
+            );
+          },
+        ),
       ),
     );
   }

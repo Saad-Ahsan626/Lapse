@@ -25,8 +25,10 @@ class HomeHeroCard extends StatelessWidget {
     final text = lapse.text;
     final radius = BorderRadius.circular(Radii.hero);
     final currency = summary.thisMonth.currency;
-    final softWhite = Colors.white.withValues(alpha: 0.78);
-    final yearly = '${formatMoney(summary.yearly)} / year';
+    const white = Colors.white;
+    final yearlyAmount = formatMoney(summary.yearly);
+    final yearly = '$yearlyAmount / year';
+    final monthly = formatMoney(summary.thisMonth);
 
     return DecoratedBox(
       decoration: BoxDecoration(borderRadius: radius, boxShadow: c.heroShadow),
@@ -56,22 +58,33 @@ class HomeHeroCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      'This month',
-                      style: text.meta.copyWith(
-                        color: Colors.white.withValues(alpha: 0.82),
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13.5,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: CountUpText(
-                        value: summary.thisMonth.minor,
-                        format: (v) => formatMoney(Money(v, currency)),
-                        style: text.moneyHero.copyWith(color: Colors.white),
+                    Semantics(
+                      container: true,
+                      label: 'This month, $monthly',
+                      excludeSemantics: true,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'This month',
+                            style: text.meta.copyWith(
+                              color: white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13.5,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: CountUpText(
+                              value: summary.thisMonth.minor,
+                              format: (v) => formatMoney(Money(v, currency)),
+                              style: text.moneyHero.copyWith(color: white),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: Space.lg),
@@ -81,12 +94,16 @@ class HomeHeroCard extends StatelessWidget {
                       spacing: Space.md,
                       runSpacing: Space.sm,
                       children: [
-                        Text(
-                          yearly,
-                          style: text.meta.copyWith(
-                            color: softWhite,
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w500,
+                        Semantics(
+                          label: '$yearlyAmount per year',
+                          excludeSemantics: true,
+                          child: Text(
+                            yearly,
+                            style: text.meta.copyWith(
+                              color: white,
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
                         if (summary.hasSavings)
@@ -97,7 +114,7 @@ class HomeHeroCard extends StatelessWidget {
                       const SizedBox(height: Space.sm),
                       Text(
                         otherCurrenciesLabel(summary.otherCurrencies),
-                        style: text.meta.copyWith(color: softWhite),
+                        style: text.meta.copyWith(color: white),
                       ),
                     ],
                   ],

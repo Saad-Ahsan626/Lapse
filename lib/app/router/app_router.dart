@@ -79,6 +79,35 @@ Page<void> _fadePage(GoRouterState state, Widget child) =>
             ),
     );
 
+const Offset detailSlideOffset = Offset(0, 0.04);
+
+Page<void> detailPage(BuildContext context, GoRouterState state, Widget child) {
+  final instant = reduceMotion(context);
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    child: child,
+    transitionDuration: instant ? Duration.zero : Motion.hero,
+    reverseTransitionDuration: instant ? Duration.zero : Motion.hero,
+    transitionsBuilder: (context, animation, _, child) {
+      final curved = CurvedAnimation(
+        parent: animation,
+        curve: Motion.emphasized,
+        reverseCurve: Curves.easeIn,
+      );
+      return FadeTransition(
+        opacity: curved,
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: detailSlideOffset,
+            end: Offset.zero,
+          ).animate(curved),
+          child: child,
+        ),
+      );
+    },
+  );
+}
+
 String? _queryValue(GoRouterState state, String key) {
   final value = state.uri.queryParameters[key]?.trim();
   return value == null || value.isEmpty ? null : value;
@@ -122,8 +151,11 @@ final List<RouteBase> _routes = [
   ),
   GoRoute(
     path: '/subscription/:id',
-    builder: (_, state) =>
-        SubscriptionDetailScreen(id: state.pathParameters['id']!),
+    pageBuilder: (context, state) => detailPage(
+      context,
+      state,
+      SubscriptionDetailScreen(id: state.pathParameters['id']!),
+    ),
     routes: [
       GoRoute(
         path: 'edit',

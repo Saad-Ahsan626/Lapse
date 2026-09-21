@@ -124,6 +124,52 @@ void main() {
     );
   });
 
+  testWidgets('page and worm travel over 320ms', (tester) async {
+    _phone(tester);
+    await _pumpRouted(tester);
+    double page() =>
+        tester.widget<WormIndicator>(find.byType(WormIndicator)).page;
+
+    await tester.tap(find.text('Next'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 160));
+    expect(page(), inExclusiveRange(0, 1));
+    final middle = WormIndicator.widthFor(0, page());
+    expect(
+      middle,
+      inExclusiveRange(WormIndicator.dotSize, WormIndicator.activeWidth),
+    );
+
+    bool scrolling() => tester
+        .widget<PageView>(find.byType(PageView))
+        .controller!
+        .position
+        .isScrollingNotifier
+        .value;
+    expect(scrolling(), isTrue);
+
+    await tester.pump(const Duration(milliseconds: 170));
+    expect(scrolling(), isFalse);
+    expect(page(), closeTo(1, 0.001));
+    expect(
+      WormIndicator.widthFor(1, page()),
+      closeTo(WormIndicator.activeWidth, 0.1),
+    );
+    expect(
+      WormIndicator.widthFor(0, page()),
+      closeTo(WormIndicator.dotSize, 0.1),
+    );
+  });
+
+  testWidgets('the worm jumps with reduce motion', (tester) async {
+    _phone(tester);
+    await _pumpRouted(tester, reduceMotion: true);
+
+    await tester.tap(find.text('Next'));
+    await tester.pump();
+    expect(tester.widget<WormIndicator>(find.byType(WormIndicator)).page, 1);
+  });
+
   testWidgets('Skip pushes setup', (tester) async {
     _phone(tester);
     final router = await _pumpRouted(tester);

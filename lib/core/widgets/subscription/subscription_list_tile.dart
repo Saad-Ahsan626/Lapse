@@ -19,6 +19,9 @@ class SubscriptionListTile extends StatelessWidget {
     this.logoAsset,
     this.heroTag,
     this.onTap,
+    this.semanticState,
+    this.semanticAmount,
+    this.semanticWhen,
     super.key,
   });
 
@@ -34,16 +37,37 @@ class SubscriptionListTile extends StatelessWidget {
   final String? logoAsset;
   final Object? heroTag;
   final VoidCallback? onTap;
+  final String? semanticState;
+  final String? semanticAmount;
+  final String? semanticWhen;
 
   static const chipWidthFactor = 0.42;
+
+  static String semanticLabelFor({
+    required String name,
+    required String amount,
+    required String when,
+    String? state,
+  }) => [
+    name,
+    ?state,
+    amount,
+    when,
+  ].where((part) => part.isNotEmpty).join(', ');
 
   @override
   Widget build(BuildContext context) {
     final text = context.lapse.text;
     return Semantics(
       button: onTap != null,
-      label: [name, if (isTrial) 'free trial', meta, dueLabel].join(', '),
+      label: semanticLabelFor(
+        name: name,
+        state: semanticState ?? (isTrial ? 'free trial' : null),
+        amount: semanticAmount ?? meta,
+        when: semanticWhen ?? dueLabel,
+      ),
       excludeSemantics: true,
+      onTap: onTap,
       child: LapseCard(
         onTap: onTap,
         child: LayoutBuilder(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:lapse/core/motion/motion.dart';
 import 'package:lapse/core/widgets/rings/countdown_ring.dart';
 
 import '../../../helpers/pump_app.dart';
@@ -25,6 +26,26 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.hasRunningAnimations, isFalse);
     expect(find.text('3'), findsOneWidget);
+  });
+
+  testWidgets('sweeps from full to its value over 800ms, emphasized', (
+    tester,
+  ) async {
+    await tester.pumpLapse(
+      const CountdownRing(progress: 0.3, color: Colors.red),
+    );
+
+    final sweep = tester.widget<TweenAnimationBuilder<double>>(
+      find.byType(TweenAnimationBuilder<double>),
+    );
+    expect(sweep.tween.begin, 1);
+    expect(sweep.tween.end, 0.3);
+    expect(sweep.duration, const Duration(milliseconds: 800));
+    expect(sweep.curve, Motion.emphasized);
+    await tester.pump(const Duration(milliseconds: 790));
+    expect(tester.hasRunningAnimations, isTrue);
+    await tester.pump(const Duration(milliseconds: 20));
+    expect(tester.hasRunningAnimations, isFalse);
   });
 
   testWidgets('does not animate under reduce motion', (tester) async {

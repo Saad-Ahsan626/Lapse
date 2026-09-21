@@ -11,7 +11,7 @@ class SkeletonRow extends StatefulWidget {
 
   final double height;
 
-  static const Duration shimmer = Duration(milliseconds: 1400);
+  static const Duration shimmer = Motion.shimmer;
 
   @override
   State<SkeletonRow> createState() => _SkeletonRowState();
@@ -72,19 +72,21 @@ class _SkeletonRowState extends State<SkeletonRow>
               ),
               const SizedBox(width: Space.md),
               Expanded(
-                child: AnimatedBuilder(
-                  animation: _controller,
-                  builder: (context, child) => isStatic
-                      ? child!
-                      : ShaderMask(
-                          blendMode: BlendMode.srcATop,
-                          shaderCallback: (bounds) => _sweep(
-                            highlight,
-                            _controller.value,
-                          ).createShader(bounds),
-                          child: child,
-                        ),
-                  child: _Bars(color: c.surfaceMuted),
+                child: RepaintBoundary(
+                  child: AnimatedBuilder(
+                    animation: _controller,
+                    builder: (context, child) => isStatic
+                        ? child!
+                        : ShaderMask(
+                            blendMode: BlendMode.srcATop,
+                            shaderCallback: (bounds) => _sweep(
+                              highlight,
+                              _controller.value,
+                            ).createShader(bounds),
+                            child: child,
+                          ),
+                    child: _Bars(color: c.surfaceMuted),
+                  ),
                 ),
               ),
             ],

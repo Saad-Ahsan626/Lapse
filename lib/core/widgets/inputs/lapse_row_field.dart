@@ -79,11 +79,14 @@ class _LapseRowFieldState extends State<LapseRowField> {
               (_multiline ? TextInputType.multiline : null),
           textInputAction: widget.textInputAction,
           maxLines: widget.maxLines,
-          minLines: 1,
+          minLines: _multiline ? 2 : 1,
           textAlign: _multiline ? TextAlign.start : TextAlign.end,
           style: valueStyle,
           decoration: InputDecoration(
             isCollapsed: true,
+            contentPadding: _multiline
+                ? const EdgeInsets.only(top: 6, bottom: 13)
+                : const EdgeInsets.symmetric(vertical: 14),
             border: InputBorder.none,
             hintText: widget.hint,
             hintStyle: hintStyle,
@@ -104,13 +107,13 @@ class _LapseRowFieldState extends State<LapseRowField> {
     Widget content;
     if (_multiline) {
       content = Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+        padding: EdgeInsets.fromLTRB(14, 13, 14, _editable ? 0 : 13),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
             ExcludeSemantics(excluding: _editable, child: labelText),
-            const SizedBox(height: 6),
+            if (!_editable) const SizedBox(height: 6),
             right,
           ],
         ),
@@ -119,7 +122,10 @@ class _LapseRowFieldState extends State<LapseRowField> {
       content = ConstrainedBox(
         constraints: const BoxConstraints(minHeight: Sizes.input),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          padding: EdgeInsets.symmetric(
+            horizontal: 14,
+            vertical: _editable ? 0 : 8,
+          ),
           child: LayoutBuilder(
             builder: (context, constraints) => Row(
               children: [
@@ -151,6 +157,7 @@ class _LapseRowFieldState extends State<LapseRowField> {
     if (_editable) {
       content = GestureDetector(
         behavior: HitTestBehavior.opaque,
+        excludeFromSemantics: true,
         onTap: _focusNode.requestFocus,
         child: content,
       );

@@ -105,3 +105,23 @@ String cancelledLabel(Subscription s) {
   final date = CalendarDate.fromDateTime(cancelledAt.toLocal());
   return 'Cancelled ${shortDateLabel(date)}';
 }
+
+String spokenAmountLabel(Subscription s) {
+  final period = periodLabel(s.period, customDays: s.customDays);
+  return '${formatMoney(s.price)} ${period.toLowerCase()}';
+}
+
+String spokenDueLabel(Subscription s, CalendarDate today) {
+  final diff = today.daysUntil(s.nextBillingDate);
+  if (diff < 0) return 'payment due';
+  final relative = relativeDueLabel(s.nextBillingDate, today);
+  if (diff < 7) return 'charges ${relative.toLowerCase()}';
+  return 'charges on $relative';
+}
+
+String spokenCancelledLabel(Subscription s) {
+  final cancelledAt = s.cancelledAt;
+  if (cancelledAt == null) return '';
+  final date = CalendarDate.fromDateTime(cancelledAt.toLocal());
+  return 'since ${shortDateLabel(date)}';
+}

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:lapse/core/motion/motion.dart';
 import 'package:lapse/core/widgets/layout/lapse_bottom_sheet.dart';
+import 'package:lapse/core/widgets/layout/lapse_sheet_route.dart';
 
 import '../../../helpers/pump_app.dart';
 
@@ -69,5 +71,45 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.getRect(find.text('Body')), early);
     });
+  });
+
+  testWidgets('fills the space under the sheet while it overshoots', (
+    tester,
+  ) async {
+    await tester.pumpLapse(
+      Builder(
+        builder: (context) => TextButton(
+          onPressed: () => showLapseSheet<void>(
+            context: context,
+            curve: Motion.springCurve,
+            duration: Motion.spring,
+            builder: (_) => const SizedBox(height: 300, child: Text('Body')),
+          ),
+          child: const Text('Open'),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Open'));
+
+    var sawFill = false;
+    for (var i = 0; i < 24; i++) {
+      await tester.pump(const Duration(milliseconds: 16));
+      final route =
+          ModalRoute.of(tester.element(find.text('Body')))!
+              as LapseSheetRoute<void>;
+      final dy = route.entranceOffset(route.animation!.value);
+      if (dy < 0) {
+        sawFill = true;
+        final fill = find.descendant(
+          of: find.byType(Stack),
+          matching: find.byWidgetPredicate(
+            (w) => w is Positioned && w.height != null && w.height! >= -dy,
+          ),
+        );
+        expect(fill, findsWidgets);
+      }
+    }
+    expect(sawFill, isTrue);
+    await tester.pumpAndSettle();
   });
 }

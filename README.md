@@ -24,8 +24,8 @@ Local-first: no account, no backend, no bank linking. Your data stays on your de
 | 5 | Cancel flow, savings, celebration | ✅ Done (device check pending) |
 | 6 | Splash, onboarding, setup | ✅ Done (device check pending) |
 | 7 | Settings & backup | ✅ Done (device check pending) |
-| 8 | Motion & accessibility polish | ⏳ Next |
-| 9 | QA & release | — |
+| 8 | Motion & accessibility polish | ✅ Done (device check pending) |
+| 9 | QA & release | ⏳ Next |
 
 Right now the app works end to end. A first launch plays the animated logo, three
 onboarding slides, a setup screen (currency and reminder time) and the notification
@@ -201,7 +201,8 @@ features/<feature>/
 - **Money is `int` minor units** (`Money`), never `double`. **Billing dates are
   `CalendarDate`**, never `DateTime`, so time zones and daylight saving can't shift a day.
 - **Reduce motion is respected.** Every animation checks `reduceMotion(context)`.
-- **Accessibility:** tap targets are at least 44×44, and widgets have `Semantics` labels.
+- **Accessibility:** tap targets are at least 48×48 (Android's guideline; the design asks for
+  44), and widgets have `Semantics` labels.
 - **One widget per file**, named after the widget.
 - **No comments or doc comments in code.** Names should explain the code; decisions are
   recorded in this README and the plan.
@@ -284,6 +285,21 @@ foreground and a monochrome layer for Android 13 themed icons, legacy PNGs for A
 7.x, and the Android 12+ splash showing the same mark the Flutter splash animates. The
 animated splash plays in full on first launch, a 0.5 s version afterwards, a 200 ms fade
 with reduce motion, and is skipped when a notification opens the app.
+
+## Motion & accessibility
+
+- **Motion** follows the design's motion spec; every duration and curve is a `Motion` token
+  (a test fails on raw durations elsewhere). The catalog sheet opens on a hand-written spring
+  (damping 0.72). With the system's *Remove animations* setting, everything becomes instant
+  or a 200 ms fade and counters jump to their final value.
+- **Automated checks:** every screen is tested in light and dark against Flutter's
+  accessibility guidelines (48 px tap targets, labelled buttons, text contrast) and at 200 %
+  text size (`test/accessibility/`).
+- **Contrast:** all text colours are at least 4.5:1 in both themes (large mint figures at
+  least 3:1). The Design Gallery's Colors section shows each ratio.
+- **Screen readers:** rows read name → state → amount → when ("Netflix, free trial, Rs 649
+  monthly, charges tomorrow"); saving the reminder time, finishing an import and changing
+  the sort are announced.
 
 ## Service catalog
 

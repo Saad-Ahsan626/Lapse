@@ -50,7 +50,7 @@ void main() {
         ),
       );
 
-      expect(decoration(tester).color, c.trial);
+      expect(decoration(tester).color, c.trialStrong);
       expect(style(tester, '7d').color, c.onTrial);
       expect(style(tester, '7d').fontWeight, FontWeight.w700);
     });

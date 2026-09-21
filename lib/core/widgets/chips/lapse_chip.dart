@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:lapse/core/motion/motion.dart';
 import 'package:lapse/core/theme/lapse_theme.dart';
 import 'package:lapse/core/theme/tokens/lapse_spacing.dart';
 import 'package:lapse/core/widgets/buttons/press_scale.dart';
@@ -32,7 +33,7 @@ class LapseChip extends StatelessWidget {
     final lapse = context.lapse;
     final c = lapse.colors;
     final trial = tone == LapseChipTone.trial;
-    final selectedBg = trial ? c.trial : c.primary;
+    final selectedBg = trial ? c.trialStrong : c.primary;
     final selectedFg = trial ? c.onTrial : c.onPrimary;
     final bg = selected
         ? selectedBg
@@ -46,6 +47,7 @@ class LapseChip extends StatelessWidget {
       selected: selected,
       label: label,
       excludeSemantics: true,
+      onTap: onTap,
       child: GestureDetector(
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
@@ -56,7 +58,7 @@ class LapseChip extends StatelessWidget {
           child: PressScale(
             enabled: onTap != null,
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
+              duration: Motion.chip,
               curve: Curves.easeOut,
               constraints: const BoxConstraints(minHeight: Sizes.chip),
               padding: EdgeInsets.symmetric(horizontal: compact ? 12 : 15),

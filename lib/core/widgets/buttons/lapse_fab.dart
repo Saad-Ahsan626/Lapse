@@ -52,8 +52,10 @@ class LapseFab extends StatelessWidget {
                       turns: open ? 0.125 : 0,
                       duration: reduceMotion(context)
                           ? Duration.zero
-                          : Motion.sheet,
-                      curve: Curves.easeOutBack,
+                          : open
+                          ? Motion.spring
+                          : Motion.fade,
+                      curve: open ? Motion.springCurve : Curves.easeInCubic,
                       child: Icon(
                         Icons.add_rounded,
                         size: 28,

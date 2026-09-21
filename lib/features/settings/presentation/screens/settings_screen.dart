@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -70,12 +71,19 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   Future<void> _editTime(BuildContext context, WidgetRef ref) async {
+    final view = View.of(context);
+    final direction = Directionality.of(context);
     final minutes = await showReminderTimeSheet(
       context,
       ref.read(settingsProvider).reminderMinutes,
     );
     if (minutes == null) return;
     await _update(ref, (s) => s.copyWith(reminderMinutes: minutes));
+    await SemanticsService.sendAnnouncement(
+      view,
+      reminderTimeSavedMessage(minutes),
+      direction,
+    );
   }
 
   Future<void> _editName(BuildContext context, WidgetRef ref) async {

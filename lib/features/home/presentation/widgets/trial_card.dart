@@ -41,8 +41,14 @@ class TrialCard extends ConsumerWidget {
       width: widthFor(context),
       child: Semantics(
         button: true,
-        label: '${subscription.name}, free trial, $meta, $due',
+        label: SubscriptionListTile.semanticLabelFor(
+          name: subscription.name,
+          state: 'free trial',
+          amount: spokenAmountLabel(subscription),
+          when: spokenDueLabel(subscription, today),
+        ),
         excludeSemantics: true,
+        onTap: onTap,
         child: LapseCard(
           onTap: onTap,
           padding: const EdgeInsets.all(14),

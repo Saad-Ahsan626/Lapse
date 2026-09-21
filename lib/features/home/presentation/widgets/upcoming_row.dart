@@ -32,6 +32,8 @@ class UpcomingRow extends ConsumerWidget {
       logoAsset: brand.logoAsset,
       heroTag: SubscriptionBrand.heroTagFor(subscription),
       onTap: onTap,
+      semanticAmount: spokenAmountLabel(subscription),
+      semanticWhen: spokenDueLabel(subscription, today),
     );
   }
 }

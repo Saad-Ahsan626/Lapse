@@ -88,13 +88,15 @@ class FormHeader extends ConsumerWidget {
                     style: nameStyle,
                     decoration: InputDecoration(
                       isCollapsed: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                      ),
                       border: InputBorder.none,
                       hintText: 'Subscription name',
                       hintStyle: nameStyle.copyWith(color: c.inkSubtle),
                     ),
                   ),
                 ),
-                const SizedBox(height: 2),
                 Text(
                   state.category ?? 'Custom subscription',
                   maxLines: 1,

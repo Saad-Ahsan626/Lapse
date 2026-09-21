@@ -11,8 +11,11 @@ class LapseColors {
     required this.primaryTint,
     required this.savings,
     required this.savingsText,
+    required this.savingsStrong,
     required this.savingsTint,
     required this.trial,
+    required this.trialStrong,
+    required this.trialText,
     required this.onTrial,
     required this.urgent,
     required this.urgentText,
@@ -48,8 +51,11 @@ class LapseColors {
     primaryTint: Color(0x1F4F46E5),
     savings: Color(0xFF10B981),
     savingsText: Color(0xFF047857),
+    savingsStrong: Color(0xFF059669),
     savingsTint: Color(0x2410B981),
     trial: Color(0xFF8B5CF6),
+    trialStrong: Color(0xFF7C3AED),
+    trialText: Color(0xFF6D28D9),
     onTrial: Color(0xFFFFFFFF),
     urgent: Color(0xFFEF4444),
     urgentText: Color(0xFFB42318),
@@ -67,7 +73,7 @@ class LapseColors {
     inputFill: Color(0xFFF7F7FA),
     ink: Color(0xFF12121A),
     inkMuted: Color(0xFF5A5A6E),
-    inkSubtle: Color(0xFF8A8A9E),
+    inkSubtle: Color(0xFF6B6B80),
     border: Color(0x1212121A),
     inputBorder: Color(0x1712121A),
     borderStrong: Color(0x2412121A),
@@ -104,8 +110,11 @@ class LapseColors {
     primaryTint: Color(0x29818CF8),
     savings: Color(0xFF10B981),
     savingsText: Color(0xFF6EE7B7),
+    savingsStrong: Color(0xFF10B981),
     savingsTint: Color(0x2E10B981),
     trial: Color(0xFF8B5CF6),
+    trialStrong: Color(0xFF7C3AED),
+    trialText: Color(0xFFC4B5FD),
     onTrial: Color(0xFFFFFFFF),
     urgent: Color(0xFFEF4444),
     urgentText: Color(0xFFFCA5A5),
@@ -157,9 +166,12 @@ class LapseColors {
 
   final Color savings;
   final Color savingsText;
+  final Color savingsStrong;
   final Color savingsTint;
 
   final Color trial;
+  final Color trialStrong;
+  final Color trialText;
   final Color onTrial;
 
   final Color urgent;
@@ -234,8 +246,11 @@ class LapseColors {
       primaryTint: c(primaryTint, other.primaryTint),
       savings: c(savings, other.savings),
       savingsText: c(savingsText, other.savingsText),
+      savingsStrong: c(savingsStrong, other.savingsStrong),
       savingsTint: c(savingsTint, other.savingsTint),
       trial: c(trial, other.trial),
+      trialStrong: c(trialStrong, other.trialStrong),
+      trialText: c(trialText, other.trialText),
       onTrial: c(onTrial, other.onTrial),
       urgent: c(urgent, other.urgent),
       urgentText: c(urgentText, other.urgentText),

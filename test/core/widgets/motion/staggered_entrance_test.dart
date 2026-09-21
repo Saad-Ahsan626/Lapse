@@ -71,6 +71,18 @@ void main() {
       );
     });
 
+    testWidgets('shows the child immediately when animate is false', (
+      tester,
+    ) async {
+      await tester.pumpLapse(
+        const StaggeredEntrance(index: 2, animate: false, child: Text('Row')),
+      );
+
+      expect(opacity(tester), 1);
+      expect(shift(tester), 0);
+      expect(tester.hasRunningAnimations, isFalse);
+    });
+
     testWidgets('shows the child immediately with reduce motion', (
       tester,
     ) async {
