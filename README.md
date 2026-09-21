@@ -20,18 +20,19 @@ Local-first: no account, no backend, no bank linking. Your data stays on your de
 | 1 | Domain & data layer (models, SQLite, billing engine) | ✅ Done |
 | 2 | Catalog & Add / Edit | ✅ Done |
 | 3 | Home, All subscriptions, Detail | ✅ Done |
-| 4 | Notifications | ⏳ Next |
-| 5 | Cancel flow, savings, celebration | — |
+| 4 | Notifications | ✅ Done (device check pending) |
+| 5 | Cancel flow, savings, celebration | ⏳ Next |
 | 6 | Splash, onboarding, setup | — |
 | 7 | Settings & backup | — |
 | 8 | Motion & accessibility polish | — |
 | 9 | QA & release | — |
 
-Right now the app works end to end without reminders: Home shows this month's total, the
+Right now the app works end to end: Home shows this month's total, the
 yearly total, savings, trials ending soon and upcoming charges; you can add subscriptions
 and free trials from a catalog of 50 services, see each one's countdown and details,
 **Cancel now ↗** straight to the service's cancel page, and mark subscriptions cancelled,
-restore or delete them. Reminder notifications come in Phase 4.
+restore or delete them. **Reminder notifications** arrive before each charge at 09:00 (7 and
+1 day before by default), with **Cancel now ↗** and **Snooze 1d** actions.
 
 ## MVP features
 
@@ -54,6 +55,7 @@ restore or delete them. Reminder notifications come in Phase 4.
 | Database | `sqflite` (hand-written SQL) |
 | Formatting | `intl` (money grouping, dates) |
 | Links | `url_launcher` (Cancel now ↗) |
+| Notifications | `flutter_local_notifications`, `timezone`, `flutter_timezone` |
 | Settings | `shared_preferences` |
 | IDs | `uuid` |
 | Vector assets | `flutter_svg` (bundled service logos) |
@@ -138,6 +140,8 @@ lib/
     ├── catalog/                    # service catalog: entity, ranked search, JSON loader,
     │                               # providers, picker sheet (screen 06)
     ├── home/                       # Home screen (05): totals, trials, upcoming, empty state
+    ├── reminders/                  # notifications: planner (pure), plugin gateway, sync,
+    │                               # background snooze, permission screen (03), Home banner
     ├── subscriptions/
     │   ├── domain/                 # entities, repository interface, BillingEngine,
     │   │                           # validator, use cases (pure Dart)
@@ -214,6 +218,22 @@ features/<feature>/
 - **Other currencies** are listed separately under the totals (no exchange rates).
 - Charges whose date has passed are logged automatically when the app starts or comes back
   to the foreground, and the next date moves forward.
+
+## How reminders work
+
+- **Planner (pure Dart):** for every active subscription and each "Remind me" offset, a
+  reminder at the reminder time (default 09:00) on `charge date − offset`. Past times are
+  skipped, at most one per subscription per day, snoozes respected.
+- **Sync:** whenever subscriptions or the reminder time change, and on start, resume and
+  time-zone change, all pending reminders are cancelled and the plan is scheduled again.
+  Nothing is scheduled until notification permission is granted.
+- **Timing:** exact alarms when the user allows them, otherwise Android's inexact
+  "allow while idle" alarms (may drift by a few minutes). Reminders survive a reboot.
+- **Actions:** tapping opens the subscription; **Cancel now ↗** opens its cancel page;
+  **Snooze 1d** runs in the background and stores `snoozedUntil`.
+- **Permission** is asked in context (Home banner → permission screen), never on launch.
+- Debug builds: Settings → Data Inspector → **Reminders** shows permission, pending count,
+  the next 20 planned reminders, **Sync now** and **Fire test in 10 s**.
 
 ## Service catalog
 

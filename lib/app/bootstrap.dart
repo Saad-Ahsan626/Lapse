@@ -1,6 +1,13 @@
+import 'dart:async';
+
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lapse/app/router/app_router.dart';
+import 'package:lapse/app/router/routes.dart';
 import 'package:lapse/core/database/app_database.dart';
 import 'package:lapse/core/providers/storage_providers.dart';
+import 'package:lapse/features/reminders/application/reminder_providers.dart';
+import 'package:lapse/features/reminders/application/reminders_bootstrap.dart';
 import 'package:lapse/features/settings/data/repositories/settings_repository_impl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -11,10 +18,22 @@ Future<ProviderContainer> bootstrap() async {
       allowList: SettingsRepositoryImpl.allKeys,
     ),
   );
-  return ProviderContainer(
+  var initialLocation = Routes.home;
+  final container = ProviderContainer(
     overrides: [
       databaseProvider.overrideWithValue(database),
       sharedPreferencesProvider.overrideWithValue(preferences),
+      initialLocationProvider.overrideWith((ref) => initialLocation),
     ],
   );
+  final launch = await bootstrapReminders(container);
+  initialLocation = initialLocationFor(launch);
+  if (launch != null) {
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => unawaited(
+        container.read(notificationTapHandlerProvider).handleLaunch(launch),
+      ),
+    );
+  }
+  return container;
 }

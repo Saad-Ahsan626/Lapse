@@ -7,15 +7,18 @@ import 'package:lapse/features/debug/presentation/screens/data_inspector_screen.
 import 'package:lapse/features/debug/presentation/screens/design_gallery_screen.dart';
 import 'package:lapse/features/home/presentation/screens/home_screen.dart';
 import 'package:lapse/features/placeholders/presentation/screens/placeholder_screen.dart';
+import 'package:lapse/features/reminders/presentation/screens/reminder_permission_screen.dart';
 import 'package:lapse/features/subscriptions/presentation/form/subscription_form_args.dart';
 import 'package:lapse/features/subscriptions/presentation/providers/subscription_tab.dart';
 import 'package:lapse/features/subscriptions/presentation/screens/add_edit_subscription_screen.dart';
 import 'package:lapse/features/subscriptions/presentation/screens/all_subscriptions_screen.dart';
 import 'package:lapse/features/subscriptions/presentation/screens/subscription_detail_screen.dart';
 
+final initialLocationProvider = Provider<String>((ref) => Routes.home);
+
 final appRouterProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(
-    initialLocation: Routes.home,
+    initialLocation: ref.watch(initialLocationProvider),
     debugLogDiagnostics: kDebugMode,
     routes: _routes,
   );
@@ -82,6 +85,10 @@ final List<RouteBase> _routes = [
         ),
       ),
     ],
+  ),
+  GoRoute(
+    path: Routes.remindersPermission,
+    builder: (_, _) => const ReminderPermissionScreen(),
   ),
   GoRoute(
     path: Routes.settings,

@@ -15,6 +15,8 @@ class SettingsRepositoryImpl implements SettingsRepository {
   static const _themeMode = 'lapse.themeMode';
   static const _onboardingDone = 'lapse.onboardingDone';
   static const _userName = 'lapse.userName';
+  static const _remindersPromptSnoozedUntil =
+      'lapse.remindersPromptSnoozedUntil';
   static const _defaultCurrency = 'lapse.defaultCurrency';
   static const _reminderMinutes = 'lapse.reminderMinutes';
   static const _defaultReminderOffsets = 'lapse.defaultReminderOffsets';
@@ -23,6 +25,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
     _themeMode,
     _onboardingDone,
     _userName,
+    _remindersPromptSnoozedUntil,
     _defaultCurrency,
     _reminderMinutes,
     _defaultReminderOffsets,
@@ -46,6 +49,11 @@ class SettingsRepositoryImpl implements SettingsRepository {
       onboardingDone:
           _read(() => _preferences.getBool(_onboardingDone)) ?? false,
       userName: _read(() => _preferences.getString(_userName)),
+      remindersPromptSnoozedUntil: _read(
+        () => DateTime.parse(
+          _preferences.getString(_remindersPromptSnoozedUntil)!,
+        ).toUtc(),
+      ),
       defaultCurrency:
           _read(() => _preferences.getString(_defaultCurrency)) ??
           _fallbackCurrency,
@@ -65,6 +73,15 @@ class SettingsRepositoryImpl implements SettingsRepository {
       await _preferences.remove(_userName);
     } else {
       await _preferences.setString(_userName, name);
+    }
+    final snoozed = settings.remindersPromptSnoozedUntil;
+    if (snoozed == null) {
+      await _preferences.remove(_remindersPromptSnoozedUntil);
+    } else {
+      await _preferences.setString(
+        _remindersPromptSnoozedUntil,
+        snoozed.toUtc().toIso8601String(),
+      );
     }
     await _preferences.setString(_defaultCurrency, settings.defaultCurrency);
     await _preferences.setInt(_reminderMinutes, settings.reminderMinutes);

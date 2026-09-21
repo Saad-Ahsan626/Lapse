@@ -11,6 +11,7 @@ class AppSettings {
     this.themeMode = AppThemeMode.system,
     this.onboardingDone = false,
     this.userName,
+    this.remindersPromptSnoozedUntil,
     this.reminderMinutes = defaultReminderMinutes,
     List<int> defaultReminderOffsets = standardReminderOffsets,
   }) : defaultReminderOffsets = List.unmodifiable(defaultReminderOffsets);
@@ -21,6 +22,7 @@ class AppSettings {
   final AppThemeMode themeMode;
   final bool onboardingDone;
   final String? userName;
+  final DateTime? remindersPromptSnoozedUntil;
   final String defaultCurrency;
   final int reminderMinutes;
   final List<int> defaultReminderOffsets;
@@ -29,6 +31,7 @@ class AppSettings {
     AppThemeMode? themeMode,
     bool? onboardingDone,
     Object? userName = _unset,
+    Object? remindersPromptSnoozedUntil = _unset,
     String? defaultCurrency,
     int? reminderMinutes,
     List<int>? defaultReminderOffsets,
@@ -36,6 +39,9 @@ class AppSettings {
     themeMode: themeMode ?? this.themeMode,
     onboardingDone: onboardingDone ?? this.onboardingDone,
     userName: identical(userName, _unset) ? this.userName : userName as String?,
+    remindersPromptSnoozedUntil: identical(remindersPromptSnoozedUntil, _unset)
+        ? this.remindersPromptSnoozedUntil
+        : remindersPromptSnoozedUntil as DateTime?,
     defaultCurrency: defaultCurrency ?? this.defaultCurrency,
     reminderMinutes: reminderMinutes ?? this.reminderMinutes,
     defaultReminderOffsets:
@@ -48,6 +54,7 @@ class AppSettings {
       other.themeMode == themeMode &&
       other.onboardingDone == onboardingDone &&
       other.userName == userName &&
+      other.remindersPromptSnoozedUntil == remindersPromptSnoozedUntil &&
       other.defaultCurrency == defaultCurrency &&
       other.reminderMinutes == reminderMinutes &&
       listEquals(other.defaultReminderOffsets, defaultReminderOffsets);
@@ -57,6 +64,7 @@ class AppSettings {
     themeMode,
     onboardingDone,
     userName,
+    remindersPromptSnoozedUntil,
     defaultCurrency,
     reminderMinutes,
     Object.hashAll(defaultReminderOffsets),

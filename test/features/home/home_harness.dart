@@ -9,12 +9,14 @@ import 'package:lapse/core/theme/app_theme.dart';
 import 'package:lapse/features/catalog/data/logo_availability.dart';
 import 'package:lapse/features/catalog/presentation/providers/catalog_providers.dart';
 import 'package:lapse/features/home/presentation/screens/home_screen.dart';
+import 'package:lapse/features/reminders/application/reminder_providers.dart';
 import 'package:lapse/features/settings/domain/entities/app_settings.dart';
 import 'package:lapse/features/settings/presentation/providers/settings_providers.dart';
 import 'package:lapse/features/subscriptions/domain/entities/subscription.dart';
 import 'package:lapse/features/subscriptions/presentation/providers/subscription_service_providers.dart';
 
 import '../../helpers/fake_catalog_repository.dart';
+import '../../helpers/fake_notification_gateway.dart';
 import '../../helpers/fake_subscription_repository.dart';
 import '../../helpers/in_memory_settings_repository.dart';
 
@@ -46,6 +48,8 @@ Future<HomeHarness> pumpHome(
   DateTime? now,
   Brightness brightness = Brightness.light,
   double textScale = 1,
+  FakeNotificationGateway? gateway,
+  InMemorySettingsRepository? settings,
 }) async {
   tester.view
     ..physicalSize = const Size(1170, 2532)
@@ -68,6 +72,10 @@ Future<HomeHarness> pumpHome(
       GoRoute(path: '/settings', builder: (_, state) => page(state)),
       GoRoute(path: '/subscriptions', builder: (_, state) => page(state)),
       GoRoute(path: '/subscription/:id', builder: (_, state) => page(state)),
+      GoRoute(
+        path: '/reminders/permission',
+        builder: (_, state) => page(state),
+      ),
     ],
   );
   addTearDown(router.dispose);
@@ -76,9 +84,13 @@ Future<HomeHarness> pumpHome(
     ProviderScope(
       overrides: [
         settingsRepositoryProvider.overrideWithValue(
-          InMemorySettingsRepository(
-            AppSettings(defaultCurrency: 'PKR', userName: userName),
-          ),
+          settings ??
+              InMemorySettingsRepository(
+                AppSettings(defaultCurrency: 'PKR', userName: userName),
+              ),
+        ),
+        notificationGatewayProvider.overrideWithValue(
+          gateway ?? FakeNotificationGateway(),
         ),
         subscriptionRepositoryProvider.overrideWithValue(repo),
         clockProvider.overrideWithValue(() => clockTime),

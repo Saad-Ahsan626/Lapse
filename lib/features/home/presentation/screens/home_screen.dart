@@ -15,6 +15,7 @@ import 'package:lapse/features/home/presentation/widgets/home_hero_placeholder.d
 import 'package:lapse/features/home/presentation/widgets/home_loading.dart';
 import 'package:lapse/features/home/presentation/widgets/trials_strip.dart';
 import 'package:lapse/features/home/presentation/widgets/upcoming_section.dart';
+import 'package:lapse/features/reminders/presentation/widgets/reminders_off_banner.dart';
 import 'package:lapse/features/subscriptions/presentation/providers/home_providers.dart';
 import 'package:lapse/features/subscriptions/presentation/providers/subscription_list_providers.dart';
 import 'package:lapse/features/subscriptions/presentation/providers/upcoming_charges.dart';
@@ -49,11 +50,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         !subscriptions.hasError && (subscriptions.value?.isNotEmpty ?? false);
 
     final body = subscriptions.when(
-      data: (all) => all.isEmpty
-          ? [
-              _CenteredSliver(child: HomeEmptyState(onAdd: _add)),
-            ]
-          : _populatedSlivers(),
+      data: (all) => [
+        const SliverToBoxAdapter(
+          child: RemindersOffBanner(
+            padding: EdgeInsets.fromLTRB(
+              Space.screen,
+              0,
+              Space.screen,
+              Space.xl,
+            ),
+          ),
+        ),
+        if (all.isEmpty)
+          _CenteredSliver(child: HomeEmptyState(onAdd: _add))
+        else
+          ..._populatedSlivers(),
+      ],
       loading: () => const [SliverToBoxAdapter(child: HomeLoading())],
       error: (_, _) => [_errorSliver()],
     );

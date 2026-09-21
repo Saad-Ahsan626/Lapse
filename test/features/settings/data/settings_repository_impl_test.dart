@@ -37,6 +37,7 @@ void main() {
       themeMode: AppThemeMode.dark,
       onboardingDone: true,
       userName: 'Saad',
+      remindersPromptSnoozedUntil: DateTime.utc(2026, 9, 28, 9),
       reminderMinutes: 20 * 60 + 30,
       defaultReminderOffsets: const [3, 0],
     );
@@ -44,6 +45,20 @@ void main() {
     await repo.save(changed);
 
     expect(repo.load(), changed);
+  });
+
+  test('clearing the reminders prompt snooze removes it', () async {
+    final repo = await repository();
+    await repo.save(
+      AppSettings(
+        defaultCurrency: 'PKR',
+        remindersPromptSnoozedUntil: DateTime.utc(2026, 9, 28),
+      ),
+    );
+
+    await repo.save(repo.load().copyWith(remindersPromptSnoozedUntil: null));
+
+    expect(repo.load().remindersPromptSnoozedUntil, isNull);
   });
 
   test('clearing the name removes it', () async {

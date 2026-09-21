@@ -16,6 +16,7 @@ abstract final class Routes {
   static String detail(String id) => '/subscription/$id';
   static String edit(String id) => '/subscription/$id/edit';
   static const settings = '/settings';
+  static const remindersPermission = '/reminders/permission';
 
   static const gallery = '/debug/gallery';
   static const dataInspector = '/debug/data';

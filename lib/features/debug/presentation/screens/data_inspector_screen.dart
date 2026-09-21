@@ -6,6 +6,7 @@ import 'package:lapse/core/theme/theme.dart';
 import 'package:lapse/core/widgets/widgets.dart';
 import 'package:lapse/features/debug/data/sample_subscriptions.dart';
 import 'package:lapse/features/debug/presentation/widgets/inspector_row.dart';
+import 'package:lapse/features/debug/presentation/widgets/reminders_debug_section.dart';
 import 'package:lapse/features/settings/presentation/providers/settings_providers.dart';
 import 'package:lapse/features/subscriptions/presentation/providers/subscription_list_providers.dart';
 import 'package:lapse/features/subscriptions/presentation/providers/subscription_service_providers.dart';
@@ -58,6 +59,8 @@ class DataInspectorScreen extends ConsumerWidget {
           Space.xxxl,
         ),
         children: [
+          const RemindersDebugSection(),
+          const SizedBox(height: Space.xxl),
           Text('TODAY', style: lapse.text.caption),
           const SizedBox(height: Space.xs),
           Text(
