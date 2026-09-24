@@ -19,7 +19,7 @@ Future<void> onBackgroundNotificationResponse(
   if (tap == null || tap.action != NotificationAction.snooze) return;
   WidgetsFlutterBinding.ensureInitialized();
   await configureLocalTimezone();
-  final database = await openAppDatabase();
+  final database = await openBackgroundDatabase();
   final repository = SubscriptionRepositoryImpl(database);
   try {
     await snoozeSubscription(

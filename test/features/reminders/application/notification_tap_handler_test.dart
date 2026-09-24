@@ -56,6 +56,16 @@ void main() {
             visits.add('detail $id');
             return Text('detail $id');
           },
+          routes: [
+            GoRoute(
+              path: 'edit',
+              builder: (_, state) {
+                final id = state.pathParameters['id']!;
+                visits.add('edit $id');
+                return Text('edit $id');
+              },
+            ),
+          ],
         ),
       ],
     );
@@ -131,6 +141,49 @@ void main() {
     router.go(Routes.home);
     await tester.pumpAndSettle();
     await tap(tester, 'sub-1', NotificationAction.cancelNow);
+    expect(location(), Routes.detail('sub-1'));
+  });
+
+  testWidgets('tapping while on that detail keeps a single detail', (
+    tester,
+  ) async {
+    await pumpRouter(tester);
+    await tap(tester, 'sub-1', NotificationAction.open);
+
+    await tap(tester, 'sub-1', NotificationAction.open);
+
+    expect(location(), Routes.detail('sub-1'));
+    expect(find.text('detail sub-1', skipOffstage: false), findsOneWidget);
+    router.pop();
+    await tester.pumpAndSettle();
+    expect(location(), Routes.home);
+  });
+
+  testWidgets('tapping while editing that subscription stays on the form', (
+    tester,
+  ) async {
+    await pumpRouter(tester);
+    router.go(Routes.edit('sub-1'));
+    await tester.pumpAndSettle();
+
+    await tap(tester, 'sub-1', NotificationAction.open);
+
+    expect(location(), Routes.edit('sub-1'));
+    expect(find.text('detail sub-1', skipOffstage: false), findsOneWidget);
+    expect(find.text('edit sub-1'), findsOneWidget);
+  });
+
+  testWidgets('tapping another subscription still pushes its detail', (
+    tester,
+  ) async {
+    await pumpRouter(tester);
+    await tap(tester, 'sub-1', NotificationAction.open);
+
+    await tap(tester, 'sub-2', NotificationAction.open);
+
+    expect(location(), Routes.detail('sub-2'));
+    router.pop();
+    await tester.pumpAndSettle();
     expect(location(), Routes.detail('sub-1'));
   });
 

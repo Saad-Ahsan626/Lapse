@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:lapse/app/router/initial_location_provider.dart';
 import 'package:lapse/app/router/routes.dart';
 import 'package:lapse/core/motion/motion.dart';
 import 'package:lapse/features/debug/presentation/screens/data_inspector_screen.dart';
@@ -21,7 +22,7 @@ import 'package:lapse/features/subscriptions/presentation/screens/add_edit_subsc
 import 'package:lapse/features/subscriptions/presentation/screens/all_subscriptions_screen.dart';
 import 'package:lapse/features/subscriptions/presentation/screens/subscription_detail_screen.dart';
 
-final initialLocationProvider = Provider<String>((ref) => Routes.splash);
+export 'package:lapse/app/router/initial_location_provider.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final onboardingDone = ValueNotifier<bool>(

@@ -4,17 +4,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lapse/core/widgets/motion/staggered_entrance.dart';
 
 import '../../../helpers/pump_app.dart';
+import '../../../helpers/rebuild_counter.dart';
 
 void main() {
   group('StaggeredEntrance', () {
     double opacity(WidgetTester tester) => tester
-        .widget<Opacity>(
+        .widget<FadeTransition>(
           find.descendant(
             of: find.byType(StaggeredEntrance),
-            matching: find.byType(Opacity),
+            matching: find.byType(FadeTransition),
           ),
         )
-        .opacity;
+        .opacity
+        .value;
 
     double shift(WidgetTester tester) => tester
         .widget<Transform>(
@@ -57,6 +59,19 @@ void main() {
 
       await tester.pump(const Duration(milliseconds: 60));
       expect(opacity(tester), greaterThan(0));
+    });
+
+    testWidgets('animates without rebuilding the entrance', (tester) async {
+      await tester.pumpLapse(
+        const StaggeredEntrance(index: 1, child: Text('Row')),
+      );
+      final counter = RebuildCounter()..start();
+      for (var i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      expect(opacity(tester), greaterThan(0));
+      expect(counter.of(StaggeredEntrance), 0);
+      expect(counter.of(Text), 0);
     });
 
     test('caps the delay at eight steps', () {

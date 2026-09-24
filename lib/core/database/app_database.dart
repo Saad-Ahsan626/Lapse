@@ -6,6 +6,8 @@ import 'package:sqflite/sqflite.dart';
 Future<Database> openAppDatabase({
   DatabaseFactory? factory,
   String? path,
+  bool singleInstance = true,
+  int version = schemaVersion,
 }) async {
   final dbFactory = factory ?? databaseFactory;
   final dbPath =
@@ -14,20 +16,29 @@ Future<Database> openAppDatabase({
   return dbFactory.openDatabase(
     dbPath,
     options: OpenDatabaseOptions(
-      version: schemaVersion,
+      version: version,
+      singleInstance: singleInstance,
       onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
-      onCreate: (db, _) async {
+      onCreate: (db, version) async {
         for (final statement in schemaV1) {
           await db.execute(statement);
         }
+        await _migrate(db, 1, version);
       },
-      onUpgrade: (db, oldVersion, newVersion) async {
-        for (var version = oldVersion + 1; version <= newVersion; version++) {
-          for (final statement in migrations[version] ?? const <String>[]) {
-            await db.execute(statement);
-          }
-        }
-      },
+      onUpgrade: _migrate,
     ),
   );
+}
+
+Future<Database> openBackgroundDatabase({
+  DatabaseFactory? factory,
+  String? path,
+}) => openAppDatabase(factory: factory, path: path, singleInstance: false);
+
+Future<void> _migrate(Database db, int oldVersion, int newVersion) async {
+  for (var version = oldVersion + 1; version <= newVersion; version++) {
+    for (final statement in migrations[version] ?? const <String>[]) {
+      await db.execute(statement);
+    }
+  }
 }

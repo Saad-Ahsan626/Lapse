@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lapse/core/domain/money.dart';
+import 'package:lapse/core/formatting/money_formatter.dart';
 
 void main() {
   const pkr = Money(29900, 'PKR');
@@ -34,6 +35,23 @@ void main() {
     expect(Money.fractionDigits('USD'), 2);
     expect(Money.fractionDigits('JPY'), 0);
     expect(Money.fractionDigits('krw'), 0);
+  });
+
+  test('dinars and rials use three decimals', () {
+    for (final code in ['KWD', 'BHD', 'OMR', 'JOD', 'TND', 'LYD', 'IQD']) {
+      expect(Money.fractionDigits(code), 3, reason: code);
+    }
+    expect(Money.fractionDigits('kwd'), 3);
+  });
+
+  test('KWD 3.125 formats and parses', () {
+    const price = Money(3125, 'KWD');
+    expect(formatMoney(price), 'KWD 3.125');
+    expect(formatMoney(const Money(1234500, 'KWD')), 'KWD 1,234.500');
+    expect(moneyInputText(price), '3.125');
+    expect(parseMoneyInput('3.125', 'KWD'), price);
+    expect(parseMoneyInput('3.1', 'KWD'), const Money(3100, 'KWD'));
+    expect(parseMoneyInput('3.1255', 'KWD'), isNull);
   });
 
   test('equality, hashCode, toString', () {

@@ -121,6 +121,25 @@ void main() {
     expect(find.text('Fri, 2 Oct 2026'), findsOneWidget);
   });
 
+  testWidgets('trial price row changes the currency', (tester) async {
+    await pumpScreen(tester, const SubscriptionFormArgs(serviceKey: 'netflix'));
+    await tester.tap(find.byType(Switch));
+    await settle(tester);
+    final suffix = find.byKey(const ValueKey('trial-currency-suffix'));
+    expect(find.descendant(of: suffix, matching: find.text('PKR')), findsOne);
+    expect(tester.getSize(suffix).height, greaterThanOrEqualTo(44));
+
+    await tester.tap(suffix);
+    await settle(tester);
+    await tester.tap(find.text('Euro'));
+    await settle(tester);
+
+    expect(find.byType(Switch), findsOneWidget);
+    expect(tester.widget<Switch>(find.byType(Switch)).value, isTrue);
+    expect(find.descendant(of: suffix, matching: find.text('EUR')), findsOne);
+    expect(find.text('€'), findsOneWidget);
+  });
+
   testWidgets('validation errors appear under the field', (tester) async {
     await pumpScreen(tester, const SubscriptionFormArgs(serviceKey: 'netflix'));
 

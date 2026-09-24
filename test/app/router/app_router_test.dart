@@ -221,7 +221,7 @@ void main() {
       );
       expect(find.byType(SplashScreen), findsOneWidget);
 
-      await _settle(tester, 40);
+      await _settle(tester, 80);
 
       expect(path(), Routes.onboarding);
       expect(find.byType(OnboardingScreen), findsOneWidget);
@@ -262,6 +262,58 @@ void main() {
       expect(path(), Routes.detail('sub-1'));
       expect(find.byType(SplashScreen), findsNothing);
       expect(find.byType(SubscriptionDetailScreen), findsOneWidget);
+    });
+
+    testWidgets('system back from a cold-start detail lands on Home', (
+      tester,
+    ) async {
+      const launch = NotificationLaunch(
+        NotificationTap(
+          subscriptionId: 'sub-1',
+          action: NotificationAction.open,
+        ),
+      );
+      await pumpApp(
+        tester,
+        onboardingDone: true,
+        initialLocation: initialLocationFor(launch),
+        seed: (harness) => harness.repository.seed([
+          subscriptionFixture(nextBillingDate: CalendarDate(2026, 10, 1)),
+        ]),
+      );
+      expect(find.byType(SplashScreen), findsNothing);
+      expect(path(), Routes.detail('sub-1'));
+
+      final handled = await tester.binding.handlePopRoute();
+      await _settle(tester);
+
+      expect(handled, isTrue);
+      expect(path(), Routes.home);
+      expect(find.byType(HomeScreen), findsOneWidget);
+      expect(find.byType(SubscriptionDetailScreen), findsNothing);
+    });
+
+    testWidgets('system back from a pushed detail pops to Home', (
+      tester,
+    ) async {
+      await pumpApp(
+        tester,
+        onboardingDone: true,
+        initialLocation: Routes.home,
+        seed: (harness) => harness.repository.seed([
+          subscriptionFixture(nextBillingDate: CalendarDate(2026, 10, 1)),
+        ]),
+      );
+      unawaited(router.push<void>(Routes.detail('sub-1')));
+      await _settle(tester);
+      expect(find.byType(SubscriptionDetailScreen), findsOneWidget);
+
+      await tester.binding.handlePopRoute();
+      await _settle(tester);
+
+      expect(path(), Routes.home);
+      expect(find.byType(SubscriptionDetailScreen), findsNothing);
+      expect(find.byType(HomeScreen), findsOneWidget);
     });
   });
 }

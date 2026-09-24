@@ -4,13 +4,15 @@ import 'package:lapse/core/theme/theme.dart';
 
 class ParallaxSlide extends StatelessWidget {
   const ParallaxSlide({
-    required this.delta,
+    required this.controller,
+    required this.index,
     required this.illustration,
     required this.text,
     super.key,
   });
 
-  final double delta;
+  final PageController controller;
+  final int index;
   final Widget illustration;
   final Widget text;
 
@@ -25,18 +27,40 @@ class ParallaxSlide extends StatelessWidget {
     required bool reduce,
   }) => reduce ? 0 : delta * width * factor;
 
+  static double pageOf(PageController controller) {
+    if (controller.hasClients && controller.position.haveDimensions) {
+      return controller.page ?? 0;
+    }
+    return controller.initialPage.toDouble();
+  }
+
   @override
   Widget build(BuildContext context) {
     final reduce = reduceMotion(context);
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
-        double shift(double factor) => offsetFor(
-          delta: delta,
-          width: width,
-          factor: factor,
-          reduce: reduce,
-        );
+        Widget shifted(Key key, double factor, Widget child) {
+          if (reduce) return child;
+          return AnimatedBuilder(
+            key: key,
+            animation: controller,
+            child: child,
+            builder: (context, child) => Transform.translate(
+              offset: Offset(
+                offsetFor(
+                  delta: index - pageOf(controller),
+                  width: width,
+                  factor: factor,
+                  reduce: reduce,
+                ),
+                0,
+              ),
+              child: child,
+            ),
+          );
+        }
+
         return SingleChildScrollView(
           child: ConstrainedBox(
             constraints: BoxConstraints(minHeight: constraints.maxHeight),
@@ -45,19 +69,21 @@ class ParallaxSlide extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Transform.translate(
-                    key: const ValueKey('parallax-illustration'),
-                    offset: Offset(shift(illustrationFactor), 0),
-                    child: SizedBox(
-                      height: illustrationHeight,
-                      child: Center(child: illustration),
+                  shifted(
+                    const ValueKey('parallax-illustration'),
+                    illustrationFactor,
+                    RepaintBoundary(
+                      child: SizedBox(
+                        height: illustrationHeight,
+                        child: Center(child: illustration),
+                      ),
                     ),
                   ),
                   const SizedBox(height: Space.xxxl),
-                  Transform.translate(
-                    key: const ValueKey('parallax-text'),
-                    offset: Offset(shift(textFactor), 0),
-                    child: text,
+                  shifted(
+                    const ValueKey('parallax-text'),
+                    textFactor,
+                    text,
                   ),
                 ],
               ),

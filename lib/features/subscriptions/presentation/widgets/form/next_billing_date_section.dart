@@ -1,30 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:lapse/core/domain/calendar_date.dart';
 import 'package:lapse/core/formatting/date_labels.dart';
+import 'package:lapse/core/providers/clock_providers.dart';
 import 'package:lapse/core/theme/theme.dart';
 import 'package:lapse/core/widgets/widgets.dart';
 import 'package:lapse/features/subscriptions/domain/validation/subscription_field.dart';
-import 'package:lapse/features/subscriptions/presentation/form/subscription_form_state.dart';
+import 'package:lapse/features/subscriptions/presentation/form/subscription_form_args.dart';
+import 'package:lapse/features/subscriptions/presentation/form/subscription_form_controller.dart';
 
-class NextBillingDateSection extends StatelessWidget {
+class NextBillingDateSection extends ConsumerWidget {
   const NextBillingDateSection({
-    required this.state,
-    required this.today,
-    required this.onChanged,
+    required this.args,
     super.key,
   });
 
-  final SubscriptionFormState state;
-  final CalendarDate today;
-  final ValueChanged<CalendarDate> onChanged;
+  final SubscriptionFormArgs args;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final provider = subscriptionFormProvider(args);
+    final (:isTrial, :isEdit, :startDate, :date, :error) = ref.watch(
+      provider.select(
+        (s) => (
+          isTrial: s.isTrial,
+          isEdit: s.isEdit,
+          startDate: s.startDate,
+          date: s.nextBillingDate,
+          error: s.errors[SubscriptionField.nextBillingDate],
+        ),
+      ),
+    );
+    final today = ref.watch(todayProvider);
     final lapse = context.lapse;
     final c = lapse.colors;
-    final label = state.isTrial ? 'Trial ends' : 'Next billing date';
-    final date = state.nextBillingDate;
+    final label = isTrial ? 'Trial ends' : 'Next billing date';
 
     Widget? trailing;
     if (date != null) {
@@ -47,10 +57,10 @@ class NextBillingDateSection extends StatelessWidget {
       label: label,
       value: date,
       format: fullDateLabel,
-      firstDate: state.isEdit ? state.startDate : today,
+      firstDate: isEdit ? startDate : today,
       trailing: trailing,
-      errorText: state.errors[SubscriptionField.nextBillingDate],
-      onChanged: onChanged,
+      errorText: error,
+      onChanged: ref.read(provider.notifier).setNextBillingDate,
     );
   }
 }

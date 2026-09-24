@@ -40,6 +40,14 @@ void main() {
     expect(validator.validate(custom.copyWith(customDays: 14)), isEmpty);
   });
 
+  test('custom period allows at most 9999 days', () {
+    final custom = valid.copyWith(period: BillingPeriod.customDays);
+    expect(validator.validate(custom.copyWith(customDays: 9999)), isEmpty);
+    expect(fieldsWithErrors(custom.copyWith(customDays: 10000)), {
+      SubscriptionField.customDays,
+    });
+  });
+
   test('anchor day is 1–31', () {
     expect(fieldsWithErrors(valid.copyWith(anchorDay: 0)), {
       SubscriptionField.anchorDay,

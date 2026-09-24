@@ -78,15 +78,6 @@ void main() {
       ]);
   }
 
-  test('chargesThisMonth covers the whole current month', () async {
-    seedHome();
-    harness.repository.charges.add(charge('end', CalendarDate(2026, 9, 30)));
-
-    final charges = await harness.read(chargesThisMonthProvider);
-
-    expect(charges.map((c) => c.id), ['sep', 'end']);
-  });
-
   test('spending summary for a seeded set', () async {
     seedHome();
 

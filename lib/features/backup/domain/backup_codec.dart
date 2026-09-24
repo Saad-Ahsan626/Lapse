@@ -10,6 +10,7 @@ import 'package:lapse/features/subscriptions/domain/entities/billing_period.dart
 import 'package:lapse/features/subscriptions/domain/entities/charge.dart';
 import 'package:lapse/features/subscriptions/domain/entities/subscription.dart';
 import 'package:lapse/features/subscriptions/domain/entities/subscription_status.dart';
+import 'package:lapse/features/subscriptions/domain/validation/subscription_validator.dart';
 
 abstract final class BackupCodec {
   static const schemaVersion = 1;
@@ -20,6 +21,7 @@ abstract final class BackupCodec {
   static final _isoDate = RegExp(r'^(\d{4})-(\d{2})-(\d{2})$');
   static const int _minutesPerDay = 24 * 60;
   static const _maxReminderOffset = 30;
+  static const _maxYear = 9999;
   static const _byteOrderMark = '\u{FEFF}';
 
   static String encode(BackupData data) =>
@@ -168,7 +170,9 @@ abstract final class BackupCodec {
     final period = _enum(BillingPeriod.values, map['period']);
     final customDays = _optionalInt(map['customDays']);
     if (period == BillingPeriod.customDays &&
-        (customDays == null || customDays < 1)) {
+        (customDays == null ||
+            customDays < 1 ||
+            customDays > SubscriptionValidator.maxCustomDays)) {
       throw const FormatException();
     }
     final anchorDay = _int(map['anchorDay']);
@@ -278,15 +282,19 @@ abstract final class BackupCodec {
     final year = int.parse(match.group(1)!);
     final month = int.parse(match.group(2)!);
     final day = int.parse(match.group(3)!);
-    if (month < 1 || month > 12) throw const FormatException();
+    if (year > _maxYear || month < 1 || month > 12) {
+      throw const FormatException();
+    }
     if (day < 1 || day > CalendarDate.daysInMonth(year, month)) {
       throw const FormatException();
     }
     return CalendarDate(year, month, day);
   }
 
-  static DateTime? _tryTimestamp(Object? json) =>
-      json is String ? DateTime.tryParse(json)?.toUtc() : null;
+  static DateTime? _tryTimestamp(Object? json) {
+    final value = json is String ? DateTime.tryParse(json)?.toUtc() : null;
+    return value == null || value.year > _maxYear ? null : value;
+  }
 
   static DateTime _requiredTimestamp(Object? json) =>
       _tryTimestamp(json) ?? (throw const FormatException());

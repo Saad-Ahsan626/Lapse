@@ -13,7 +13,6 @@ import 'package:lapse/features/backup/domain/backup_settings.dart';
 import 'package:lapse/features/backup/domain/import_mode.dart';
 import 'package:lapse/features/backup/domain/import_result.dart';
 import 'package:lapse/features/settings/domain/entities/app_settings.dart';
-import 'package:lapse/features/subscriptions/domain/entities/charge.dart';
 import 'package:lapse/features/subscriptions/domain/repositories/subscription_repository.dart';
 
 typedef SettingsReader = AppSettings Function();
@@ -56,7 +55,7 @@ class BackupService {
       exportedAt: _clock().toUtc(),
       settings: BackupSettings.of(_readSettings()),
       subscriptions: subscriptions,
-      charges: await _allCharges(subscriptions.map((s) => s.id)),
+      charges: await _repository.allCharges(),
     );
   }
 
@@ -94,14 +93,14 @@ class BackupService {
         final local = await _repository.getAll();
         final merged = BackupMerge.merge(
           local: local,
-          localCharges: await _allCharges(local.map((s) => s.id)),
+          localCharges: await _repository.allCharges(),
           incoming: data.subscriptions,
           incomingCharges: data.charges,
         );
         await _repository.replaceAll(merged.subscriptions, merged.charges);
     }
-    await _updateSettings(data.settings.applyTo);
-    await _rollOver();
+    await _afterImport(() => _updateSettings(data.settings.applyTo));
+    await _afterImport(_rollOver);
     return ImportResult(
       mode: mode,
       subscriptions: data.subscriptions.length,
@@ -109,11 +108,11 @@ class BackupService {
     );
   }
 
-  Future<List<Charge>> _allCharges(Iterable<String> subscriptionIds) async {
-    final charges = <Charge>[];
-    for (final id in subscriptionIds) {
-      charges.addAll(await _repository.chargesFor(id));
+  Future<void> _afterImport(Future<Object?> Function() step) async {
+    try {
+      await step();
+    } on Object {
+      return;
     }
-    return charges;
   }
 }

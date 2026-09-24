@@ -42,6 +42,19 @@ void main() {
     expect(h.timezoneCalls, 1);
   });
 
+  test('bootstrap can leave the timezone to a parallel step', () async {
+    final h = ReminderHarness(gateway: FakeNotificationGateway(launch: launch));
+    final container = h.container();
+    addTearDown(container.dispose);
+
+    expect(
+      await bootstrapReminders(container, configureTimezone: false),
+      launch,
+    );
+    expect(h.gateway.isInitialized, isTrue);
+    expect(h.timezoneCalls, 0);
+  });
+
   test('bootstrap never throws', () async {
     final h = ReminderHarness(gateway: _BrokenGateway());
     final container = h.container();

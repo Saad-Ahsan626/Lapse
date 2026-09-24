@@ -1,3 +1,4 @@
+import 'package:lapse/core/domain/calendar_date.dart';
 import 'package:lapse/features/subscriptions/domain/entities/charge.dart';
 import 'package:lapse/features/subscriptions/domain/entities/subscription.dart';
 
@@ -22,12 +23,16 @@ abstract final class BackupMerge {
         byId[candidate.id] = candidate;
       }
     }
-    final chargeIds = {for (final charge in localCharges) charge.id};
-    final charges = [
-      ...localCharges,
-      for (final charge in incomingCharges)
-        if (chargeIds.add(charge.id)) charge,
-    ];
+    final chargeIds = <String>{};
+    final chargeDays = <(String, CalendarDate)>{};
+    final charges = <Charge>[];
+    for (final charge in [...localCharges, ...incomingCharges]) {
+      final day = (charge.subscriptionId, charge.chargedOn);
+      if (chargeIds.contains(charge.id) || chargeDays.contains(day)) continue;
+      chargeIds.add(charge.id);
+      chargeDays.add(day);
+      charges.add(charge);
+    }
     return (subscriptions: byId.values.toList(), charges: charges);
   }
 }

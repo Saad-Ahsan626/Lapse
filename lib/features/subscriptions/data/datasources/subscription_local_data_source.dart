@@ -4,6 +4,8 @@ import 'package:sqflite/sqflite.dart';
 class SubscriptionLocalDataSource {
   const SubscriptionLocalDataSource(this._db);
 
+  static const _maxVariables = 500;
+
   final DatabaseExecutor _db;
 
   Future<List<Map<String, Object?>>> subscriptions() => _db.query(
@@ -19,6 +21,26 @@ class SubscriptionLocalDataSource {
       limit: 1,
     );
     return rows.isEmpty ? null : rows.first;
+  }
+
+  Future<Map<String, String>> nextBillingDates(List<String> ids) async {
+    final result = <String, String>{};
+    for (var start = 0; start < ids.length; start += _maxVariables) {
+      final end = start + _maxVariables < ids.length
+          ? start + _maxVariables
+          : ids.length;
+      final chunk = ids.sublist(start, end);
+      final rows = await _db.query(
+        Tables.subscriptions,
+        columns: ['id', 'next_billing_date'],
+        where: 'id IN (${List.filled(chunk.length, '?').join(', ')})',
+        whereArgs: chunk,
+      );
+      for (final row in rows) {
+        result[row['id']! as String] = row['next_billing_date']! as String;
+      }
+    }
+    return result;
   }
 
   Future<void> upsertSubscription(Map<String, Object?> row) async {
@@ -44,6 +66,11 @@ class SubscriptionLocalDataSource {
         orderBy: 'charged_on ASC',
       );
 
+  Future<List<Map<String, Object?>>> allCharges() => _db.query(
+    Tables.charges,
+    orderBy: 'subscription_id ASC, charged_on ASC, id ASC',
+  );
+
   Future<List<Map<String, Object?>>> chargesBetween(String from, String to) =>
       _db.query(
         Tables.charges,
@@ -53,9 +80,12 @@ class SubscriptionLocalDataSource {
       );
 
   Future<void> insertCharges(List<Map<String, Object?>> rows) async {
+    if (rows.isEmpty) return;
+    final batch = _db.batch();
     for (final row in rows) {
-      await _db.insert(Tables.charges, row);
+      batch.insert(Tables.charges, row);
     }
+    await batch.commit(noResult: true);
   }
 
   Future<void> deleteEverything() async {

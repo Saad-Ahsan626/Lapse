@@ -39,7 +39,14 @@ class NotificationTapHandler {
         await _openCancelLink(subscription)) {
       return;
     }
+    if (_isShowing(subscription.id)) return;
     unawaited(_router.push<void>(Routes.detail(subscription.id)));
+  }
+
+  bool _isShowing(String id) {
+    if (_router.routerDelegate.currentConfiguration.isEmpty) return false;
+    final path = _router.state.uri.path;
+    return path == Routes.detail(id) || path == Routes.edit(id);
   }
 
   Future<void> handleLaunch(NotificationLaunch launch) async {

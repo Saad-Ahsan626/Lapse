@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lapse/core/domain/calendar_date.dart';
 import 'package:lapse/features/backup/domain/backup_merge.dart';
 
 import '../../../helpers/subscription_fixtures.dart';
@@ -67,7 +68,11 @@ void main() {
   test('adds charges by id without duplicating', () {
     final kept = chargeFixture('c-1', subscriptionId: 'a');
     final sameId = chargeFixture('c-1', subscriptionId: 'a', minor: 1);
-    final added = chargeFixture('c-2', subscriptionId: 'a');
+    final added = chargeFixture(
+      'c-2',
+      subscriptionId: 'a',
+      on: CalendarDate(2026, 9, 30),
+    );
 
     final merged = BackupMerge.merge(
       local: [subscriptionFixture(id: 'a')],
@@ -77,5 +82,34 @@ void main() {
     );
 
     expect(merged.charges, [kept, added]);
+  });
+  test('two devices rolled over the same date keep one charge', () {
+    final phone = chargeFixture(
+      'phone-1',
+      subscriptionId: 'a',
+      on: CalendarDate(2026, 9, 1),
+    );
+    final tablet = chargeFixture(
+      'tablet-1',
+      subscriptionId: 'a',
+      on: CalendarDate(2026, 9, 1),
+    );
+    final otherSubscription = chargeFixture(
+      'tablet-2',
+      subscriptionId: 'b',
+      on: CalendarDate(2026, 9, 1),
+    );
+
+    final merged = BackupMerge.merge(
+      local: [subscriptionFixture(id: 'a')],
+      localCharges: [phone],
+      incoming: [
+        subscriptionFixture(id: 'a'),
+        subscriptionFixture(id: 'b'),
+      ],
+      incomingCharges: [tablet, otherSubscription],
+    );
+
+    expect(merged.charges, [phone, otherSubscription]);
   });
 }

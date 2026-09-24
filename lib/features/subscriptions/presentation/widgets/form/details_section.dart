@@ -1,22 +1,20 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:lapse/core/theme/theme.dart';
 import 'package:lapse/core/widgets/widgets.dart';
 import 'package:lapse/features/subscriptions/domain/validation/subscription_field.dart';
-import 'package:lapse/features/subscriptions/presentation/form/subscription_form_state.dart';
+import 'package:lapse/features/subscriptions/presentation/form/subscription_form_args.dart';
+import 'package:lapse/features/subscriptions/presentation/form/subscription_form_controller.dart';
 
-class DetailsSection extends StatelessWidget {
+class DetailsSection extends ConsumerWidget {
   const DetailsSection({
-    required this.state,
+    required this.args,
     required this.cancelUrlController,
     required this.paymentMethodController,
     required this.notesController,
-    required this.onCancelUrlChanged,
-    required this.onCategoryChanged,
-    required this.onPaymentMethodChanged,
-    required this.onNotesChanged,
     super.key,
   });
 
@@ -36,20 +34,19 @@ class DetailsSection extends StatelessWidget {
     'Other',
   ];
 
-  final SubscriptionFormState state;
+  final SubscriptionFormArgs args;
   final TextEditingController cancelUrlController;
   final TextEditingController paymentMethodController;
   final TextEditingController notesController;
-  final ValueChanged<String> onCancelUrlChanged;
-  final ValueChanged<String> onCategoryChanged;
-  final ValueChanged<String> onPaymentMethodChanged;
-  final ValueChanged<String> onNotesChanged;
 
-  Future<void> _pickCategory(BuildContext context) async {
+  Future<void> _pickCategory(
+    BuildContext context,
+    String? current,
+    ValueChanged<String> onPicked,
+  ) async {
     final options = [
       ...categories,
-      if (state.category != null && !categories.contains(state.category))
-        state.category!,
+      if (current != null && !categories.contains(current)) current,
     ];
     final picked = await showLapseSheet<String>(
       context: context,
@@ -64,7 +61,7 @@ class DetailsSection extends StatelessWidget {
             for (final option in options)
               Semantics(
                 button: true,
-                selected: option == state.category,
+                selected: option == current,
                 label: option,
                 excludeSemantics: true,
                 onTap: () => Navigator.of(sheetContext).pop(option),
@@ -82,7 +79,7 @@ class DetailsSection extends StatelessWidget {
                           Expanded(
                             child: Text(option, style: lapse.text.itemTitle),
                           ),
-                          if (option == state.category)
+                          if (option == current)
                             Icon(
                               Icons.check_rounded,
                               size: 22,
@@ -98,11 +95,22 @@ class DetailsSection extends StatelessWidget {
         );
       },
     );
-    if (picked != null) onCategoryChanged(picked);
+    if (picked != null) onPicked(picked);
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final provider = subscriptionFormProvider(args);
+    final (:category, :cancelUrlError, :paymentError) = ref.watch(
+      provider.select(
+        (s) => (
+          category: s.category,
+          cancelUrlError: s.errors[SubscriptionField.cancelUrl],
+          paymentError: s.errors[SubscriptionField.paymentMethod],
+        ),
+      ),
+    );
+    final notifier = ref.read(provider.notifier);
     return LapseRowGroup(
       children: [
         LapseRowField(
@@ -111,30 +119,32 @@ class DetailsSection extends StatelessWidget {
           hint: 'https://',
           keyboardType: TextInputType.url,
           textInputAction: TextInputAction.next,
-          errorText: state.errors[SubscriptionField.cancelUrl],
-          onChanged: onCancelUrlChanged,
+          errorText: cancelUrlError,
+          onChanged: notifier.setCancelUrl,
         ),
         LapseRowField(
           label: 'Category',
-          value: state.category,
+          value: category,
           hint: 'Choose',
           trailing: const Icon(Icons.keyboard_arrow_down_rounded),
-          onTap: () => unawaited(_pickCategory(context)),
+          onTap: () => unawaited(
+            _pickCategory(context, category, notifier.setCategory),
+          ),
         ),
         LapseRowField(
           label: 'Payment method',
           controller: paymentMethodController,
           hint: 'e.g. HBL ···· 4417',
           textInputAction: TextInputAction.next,
-          errorText: state.errors[SubscriptionField.paymentMethod],
-          onChanged: onPaymentMethodChanged,
+          errorText: paymentError,
+          onChanged: notifier.setPaymentMethod,
         ),
         LapseRowField(
           label: 'Notes',
           controller: notesController,
           hint: 'Optional',
           maxLines: 4,
-          onChanged: onNotesChanged,
+          onChanged: notifier.setNotes,
         ),
       ],
     );

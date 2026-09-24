@@ -32,11 +32,60 @@ void main() {
       expect(full.arcFraction(2100), closeTo(rest, 1e-9));
     });
 
-    test('bumps the scale between 900 and 1100 ms', () {
+    test('springs the scale between 900 and 1100 ms', () {
       expect(full.logoScale(700), 1);
       expect(full.logoScale(900), 1);
-      expect(full.logoScale(1000), closeTo(1.08, 1e-9));
+      final samples = [
+        for (var ms = 901.0; ms < 1100; ms++) full.logoScale(ms),
+      ];
+      final peak = samples.reduce(math.max);
+      final dip = samples.reduce(math.min);
+      expect(peak, closeTo(1.08, 0.005));
+      expect(samples.indexOf(peak), lessThan(60));
+      expect(dip, inExclusiveRange(0.97, 1));
       expect(full.logoScale(1100), 1);
+    });
+
+    test('shows a fading track and a glowing head while the ring draws', () {
+      expect(full.trackOpacity(0), 0);
+      expect(full.trackOpacity(150), 1);
+      expect(full.trackOpacity(900), 1);
+      expect(full.trackOpacity(1000), inExclusiveRange(0, 1));
+      expect(full.trackOpacity(1100), 0);
+      expect(full.headGlow(0), 0);
+      expect(full.headGlow(300), 1);
+      expect(full.headGlow(600), inExclusiveRange(0, 1));
+      expect(full.headGlow(700), 0);
+    });
+
+    test('ripples outward from the snap until 1500 ms', () {
+      expect(full.rippleProgress(899), isNull);
+      expect(full.rippleProgress(900), 0);
+      expect(full.rippleProgress(1200), inExclusiveRange(0, 1));
+      expect(full.rippleProgress(1500), isNull);
+    });
+
+    test('staggers the letters and then the tagline', () {
+      final starts = [
+        for (var i = 0; i < SplashTimeline.wordmark.length; i++)
+          [for (var ms = 1200.0; ms <= 1700; ms++) ms].firstWhere(
+            (ms) => full.letterProgress(i, ms) > 0,
+          ),
+      ];
+      for (var i = 1; i < starts.length; i++) {
+        expect(starts[i] - starts[i - 1], closeTo(35, 1.5));
+      }
+      expect(full.letterOffset(0, 1250), SplashTimeline.wordmarkRise);
+      expect(full.letterOffset(0, 1450), 0);
+      expect(full.taglineOpacity(1450), 0);
+      expect(full.taglineOpacity(1550), inExclusiveRange(0, 1));
+      expect(full.taglineOpacity(1650), 1);
+    });
+
+    test('breathes a background glow in over 600 ms', () {
+      expect(full.backgroundGlow(0), 0);
+      expect(full.backgroundGlow(300), inExclusiveRange(0, 1));
+      expect(full.backgroundGlow(600), 1);
     });
 
     test('draws the check with a glow pulse from 1100 to 1400 ms', () {
@@ -70,18 +119,62 @@ void main() {
   group('short sequence', () {
     const short = SplashTimeline.short();
 
-    test('shows the complete mark with the wordmark, then exits', () {
-      expect(short.arcFraction(0), closeTo(rest, 1e-9));
-      expect(short.arcRotation(0), 0);
-      expect(short.checkProgress(0), 1);
-      expect(short.glowOpacity(100), 0);
-      expect(short.wordmarkOpacity(0), 0);
-      expect(short.wordmarkOpacity(200), 1);
-      expect(short.wordmarkOffset(200), 0);
-      expect(short.logoScale(300), 1);
-      expect(short.opacity(300), 1);
-      expect(short.logoScale(500), closeTo(0.88, 1e-9));
-      expect(short.opacity(500), 0);
+    test('sweeps the ring to rest in 300 ms with a track and head glow', () {
+      expect(short.arcFraction(0), 0);
+      expect(short.arcFraction(150), inExclusiveRange(0, rest));
+      expect(short.arcFraction(300), closeTo(rest, 1e-9));
+      expect(short.arcFraction(600), closeTo(rest, 1e-9));
+      for (final ms in [0.0, 150.0, 300.0, 600.0]) {
+        expect(short.arcRotation(ms), 0);
+        expect(short.rippleProgress(ms), isNull);
+        expect(short.glowOpacity(ms), 0);
+      }
+      expect(short.trackOpacity(0), 0);
+      expect(short.trackOpacity(150), 1);
+      expect(short.trackOpacity(350), inExclusiveRange(0, 1));
+      expect(short.trackOpacity(400), 0);
+      expect(short.headGlow(0), 0);
+      expect(short.headGlow(150), 1);
+      expect(short.headGlow(300), inExclusiveRange(0, 1));
+      expect(short.headGlow(350), 0);
+    });
+
+    test('draws the check from 200 to 400 ms', () {
+      expect(short.checkProgress(0), 0);
+      expect(short.checkProgress(200), 0);
+      expect(short.checkProgress(300), closeTo(0.5, 1e-9));
+      expect(short.checkProgress(400), 1);
+      expect(short.checkProgress(600), 1);
+    });
+
+    test('fades the wordmark and tagline in from 150 to 350 ms', () {
+      expect(short.wordmarkOpacity(150), 0);
+      expect(short.taglineOpacity(150), 0);
+      expect(short.wordmarkOpacity(250), inExclusiveRange(0, 1));
+      expect(short.taglineOpacity(250), inExclusiveRange(0, 1));
+      expect(short.wordmarkOffset(250), inExclusiveRange(0, 8));
+      expect(short.wordmarkOpacity(350), 1);
+      expect(short.taglineOpacity(350), 1);
+      expect(short.wordmarkOffset(350), 0);
+    });
+
+    test('exits to 0.88 and fades out from 400 to 600 ms', () {
+      expect(short.logoScale(0), 1);
+      expect(short.opacity(0), 1);
+      expect(short.logoScale(400), 1);
+      expect(short.opacity(400), 1);
+      expect(short.logoScale(500), inExclusiveRange(0.88, 1));
+      expect(short.opacity(500), inExclusiveRange(0, 1));
+      expect(short.logoScale(600), closeTo(0.88, 1e-9));
+      expect(short.opacity(600), 0);
+    });
+
+    test('warms up at moments inside the sequence', () {
+      final moments = short.warmUpMoments;
+      expect(moments, isNotEmpty);
+      expect(moments.first, greaterThan(0));
+      expect(moments.last, lessThan(600));
+      expect(full.warmUpMoments.any((ms) => ms > 900 && ms < 1500), isTrue);
     });
   });
 
@@ -96,6 +189,11 @@ void main() {
         expect(reduced.glowOpacity(ms), 0);
         expect(reduced.wordmarkOpacity(ms), 1);
         expect(reduced.wordmarkOffset(ms), 0);
+        expect(reduced.trackOpacity(ms), 0);
+        expect(reduced.headGlow(ms), 0);
+        expect(reduced.rippleProgress(ms), isNull);
+        expect(reduced.backgroundGlow(ms), 0);
+        expect(reduced.taglineOpacity(ms), 1);
       }
       expect(reduced.opacity(0), 1);
       expect(reduced.opacity(100), inExclusiveRange(0, 1));
@@ -107,7 +205,7 @@ void main() {
     expect(full.duration, const Duration(milliseconds: 2100));
     expect(
       const SplashTimeline.short().duration,
-      const Duration(milliseconds: 500),
+      const Duration(milliseconds: 600),
     );
     expect(
       const SplashTimeline.reduced().duration,

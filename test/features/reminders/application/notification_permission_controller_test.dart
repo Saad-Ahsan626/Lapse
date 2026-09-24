@@ -81,7 +81,8 @@ void main() {
     await pumpEventQueue();
 
     expect(result, ReminderPermission.granted);
-    expect(gateway.cancelAllCount, 1);
+    expect(gateway.calls, contains('pendingIds'));
+    expect(gateway.cancelAllCount, 0);
     expect(container.read(reminderSyncProvider), isNotNull);
   });
 }

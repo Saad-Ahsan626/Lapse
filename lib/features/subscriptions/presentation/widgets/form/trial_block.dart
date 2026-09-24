@@ -7,24 +7,31 @@ import 'package:lapse/core/domain/currency_info.dart';
 import 'package:lapse/core/motion/motion.dart';
 import 'package:lapse/core/theme/theme.dart';
 import 'package:lapse/core/widgets/widgets.dart';
-import 'package:lapse/features/subscriptions/domain/validation/subscription_field.dart';
 import 'package:lapse/features/subscriptions/presentation/form/subscription_form_state.dart';
 
 class TrialBlock extends StatelessWidget {
   const TrialBlock({
-    required this.state,
+    required this.isTrial,
+    required this.trialLengthDays,
+    required this.currency,
     required this.priceController,
     required this.onTrialChanged,
     required this.onTrialLengthChanged,
     required this.onPriceChanged,
+    required this.onCurrencyTap,
+    this.priceError,
     super.key,
   });
 
-  final SubscriptionFormState state;
+  final bool isTrial;
+  final int? trialLengthDays;
+  final String currency;
+  final String? priceError;
   final TextEditingController priceController;
   final ValueChanged<bool> onTrialChanged;
   final ValueChanged<int?> onTrialLengthChanged;
   final ValueChanged<String> onPriceChanged;
+  final VoidCallback onCurrencyTap;
 
   static Duration get revealDuration => Motion.expand + Motion.fieldFade;
 
@@ -38,7 +45,7 @@ class TrialBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     final lapse = context.lapse;
     final c = lapse.colors;
-    final on = state.isTrial;
+    final on = isTrial;
     final reduce = reduceMotion(context);
 
     return AnimatedContainer(
@@ -86,18 +93,18 @@ class TrialBlock extends StatelessWidget {
     return MergeSemantics(
       child: InkWell(
         borderRadius: BorderRadius.circular(Radii.card),
-        onTap: () => onTrialChanged(!state.isTrial),
+        onTap: () => onTrialChanged(!isTrial),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(14, Space.xs, Space.sm, Space.xs),
           child: Row(
             children: [
-              if (state.isTrial) ...[
+              if (isTrial) ...[
                 const TrialBadge(),
                 const SizedBox(width: 10),
               ],
               Expanded(child: Text('Free trial', style: lapse.text.itemTitle)),
               Switch(
-                value: state.isTrial,
+                value: isTrial,
                 onChanged: onTrialChanged,
                 activeTrackColor: c.trial,
               ),
@@ -135,14 +142,14 @@ class TrialBlock extends StatelessWidget {
               for (final days in SubscriptionFormState.trialLengths)
                 LapseChip(
                   label: '${days}d',
-                  selected: state.trialLengthDays == days,
+                  selected: trialLengthDays == days,
                   tone: LapseChipTone.trial,
                   onTint: true,
                   onTap: () => onTrialLengthChanged(days),
                 ),
               LapseChip(
                 label: 'Custom',
-                selected: state.trialLengthDays == null,
+                selected: trialLengthDays == null,
                 tone: LapseChipTone.trial,
                 onTint: true,
                 onTap: () => onTrialLengthChanged(null),
@@ -172,10 +179,76 @@ class TrialBlock extends StatelessWidget {
   Widget _priceRow(BuildContext context) {
     final lapse = context.lapse;
     final c = lapse.colors;
-    final error = state.errors[SubscriptionField.price];
+    final error = priceError;
+    final info = currencyInfo(currency);
     final valueStyle = lapse.text.itemTitle.copyWith(
       fontWeight: FontWeight.w700,
       fontFeatures: LapseTypography.tabular,
+    );
+    final stacked = MediaQuery.textScalerOf(context).scale(1) > 1.5;
+    final Widget label = ExcludeSemantics(
+      child: Text(
+        'Price after trial',
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: lapse.text.body.copyWith(
+          fontWeight: FontWeight.w600,
+          color: c.inkMuted,
+        ),
+      ),
+    );
+    final Widget value = Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        ExcludeSemantics(
+          child: Text(
+            info.symbol,
+            style: valueStyle,
+          ),
+        ),
+        const SizedBox(width: 5),
+        Flexible(
+          child: ListenableBuilder(
+            listenable: priceController,
+            builder: (context, child) => SizedBox(
+              width: math.max(
+                Sizes.minTap,
+                _inputWidth(context, valueStyle),
+              ),
+              child: child,
+            ),
+            child: Semantics(
+              label: 'Price after trial',
+              child: TextField(
+                controller: priceController,
+                onChanged: onPriceChanged,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(
+                    RegExp('[0-9.,]'),
+                  ),
+                ],
+                textAlign: TextAlign.end,
+                style: valueStyle,
+                decoration: InputDecoration(
+                  isCollapsed: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 15,
+                  ),
+                  border: InputBorder.none,
+                  hintText: '0',
+                  hintStyle: valueStyle.copyWith(
+                    color: c.inkSubtle,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        _CurrencySuffix(info: info, onTap: onCurrencyTap),
+      ],
     );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -194,80 +267,24 @@ class TrialBlock extends StatelessWidget {
             constraints: const BoxConstraints(minHeight: 49),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: Space.lg),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: ExcludeSemantics(
-                      child: Text(
-                        'Price after trial',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: lapse.text.body.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: c.inkMuted,
+              child: stacked
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: Space.sm),
+                          child: label,
                         ),
-                      ),
+                        value,
+                      ],
+                    )
+                  : Row(
+                      children: [
+                        Expanded(child: label),
+                        const SizedBox(width: Space.md),
+                        Expanded(child: value),
+                      ],
                     ),
-                  ),
-                  const SizedBox(width: Space.md),
-                  Expanded(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) => Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          ExcludeSemantics(
-                            child: Text(
-                              currencyInfo(state.currency).symbol,
-                              style: valueStyle,
-                            ),
-                          ),
-                          const SizedBox(width: 5),
-                          ConstrainedBox(
-                            constraints: BoxConstraints(
-                              maxWidth: math.max(40, constraints.maxWidth - 40),
-                            ),
-                            child: SizedBox(
-                              width: math.max(
-                                Sizes.minTap,
-                                _inputWidth(context, valueStyle),
-                              ),
-                              child: Semantics(
-                                label: 'Price after trial',
-                                child: TextField(
-                                  controller: priceController,
-                                  onChanged: onPriceChanged,
-                                  keyboardType:
-                                      const TextInputType.numberWithOptions(
-                                        decimal: true,
-                                      ),
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.allow(
-                                      RegExp('[0-9.,]'),
-                                    ),
-                                  ],
-                                  textAlign: TextAlign.end,
-                                  style: valueStyle,
-                                  decoration: InputDecoration(
-                                    isCollapsed: true,
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      vertical: 15,
-                                    ),
-                                    border: InputBorder.none,
-                                    hintText: '0',
-                                    hintStyle: valueStyle.copyWith(
-                                      color: c.inkSubtle,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
             ),
           ),
         ),
@@ -287,6 +304,45 @@ class TrialBlock extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+class _CurrencySuffix extends StatelessWidget {
+  const _CurrencySuffix({required this.info, required this.onTap});
+
+  final CurrencyInfo info;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final lapse = context.lapse;
+    return Semantics(
+      button: true,
+      label: 'Currency, ${info.code}. Change currency',
+      excludeSemantics: true,
+      onTap: onTap,
+      child: GestureDetector(
+        key: const ValueKey('trial-currency-suffix'),
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            minWidth: Sizes.minTap,
+            minHeight: Sizes.minTap,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.only(left: Space.sm),
+            child: Center(
+              widthFactor: 1,
+              child: Text(
+                info.code,
+                style: lapse.text.chip.copyWith(color: lapse.colors.primary),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

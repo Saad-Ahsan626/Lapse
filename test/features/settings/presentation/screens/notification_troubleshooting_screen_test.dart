@@ -177,9 +177,9 @@ void main() {
     await tester.tap(find.text('Sync now'));
     await settle(tester);
 
-    expect(h.gateway.scheduled, hasLength(1));
-    expect(find.text('Scheduled 1 reminder'), findsOneWidget);
-    expect(_in('Scheduled reminders', '1 scheduled'), findsOneWidget);
+    expect(h.gateway.scheduled, hasLength(3));
+    expect(find.text('Scheduled 3 reminders'), findsOneWidget);
+    expect(_in('Scheduled reminders', '3 scheduled'), findsOneWidget);
     expect(
       find.text('Next: Spotify Premium · Thu, 24 Sep · 09:00 AM'),
       findsOneWidget,

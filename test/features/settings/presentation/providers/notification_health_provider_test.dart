@@ -104,4 +104,26 @@ void main() {
     expect(health.pendingCount, 0);
     expect(health.needsAttention, isTrue);
   });
+
+  test(
+    'notificationHealthProvider is dropped after its last listener',
+    () async {
+      final harness = ReminderHarness();
+      final container = harness.container([
+        systemBridgeProvider.overrideWithValue(FakeSystemBridge()),
+      ]);
+      addTearDown(container.dispose);
+
+      final subscription = container.listen(
+        notificationHealthProvider,
+        (_, _) {},
+      );
+      await container.read(notificationHealthProvider.future);
+      expect(container.exists(notificationHealthProvider), isTrue);
+
+      subscription.close();
+      await pumpEventQueue();
+      expect(container.exists(notificationHealthProvider), isFalse);
+    },
+  );
 }

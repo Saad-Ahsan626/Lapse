@@ -6,6 +6,7 @@ class SubscriptionValidator {
   const SubscriptionValidator();
 
   static const maxReminderOffset = 30;
+  static const maxCustomDays = 9999;
 
   static final _cardNumber = RegExp(r'\d(?:[ -]*\d){12,}');
 
@@ -22,6 +23,9 @@ class SubscriptionValidator {
       final days = subscription.customDays;
       if (days == null || days < 1) {
         errors[SubscriptionField.customDays] = 'Enter how many days';
+      } else if (days > maxCustomDays) {
+        errors[SubscriptionField.customDays] =
+            'Enter at most $maxCustomDays days';
       }
     }
     if (subscription.anchorDay < 1 || subscription.anchorDay > 31) {

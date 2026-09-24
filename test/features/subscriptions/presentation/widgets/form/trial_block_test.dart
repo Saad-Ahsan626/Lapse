@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lapse/core/domain/calendar_date.dart';
-import 'package:lapse/features/subscriptions/domain/entities/billing_period.dart';
 import 'package:lapse/features/subscriptions/presentation/form/subscription_form_state.dart';
 import 'package:lapse/features/subscriptions/presentation/widgets/form/trial_block.dart';
 
@@ -23,17 +21,14 @@ void main() {
         builder: (context, setState) => SizedBox(
           width: 360,
           child: TrialBlock(
-            state: SubscriptionFormState(
-              name: 'Netflix',
-              currency: 'PKR',
-              period: BillingPeriod.monthly,
-              startDate: CalendarDate(2026, 9, 18),
-              isTrial: trial,
-            ),
+            isTrial: trial,
+            trialLengthDays: SubscriptionFormState.defaultTrialLength,
+            currency: 'PKR',
             priceController: price,
             onTrialChanged: (value) => setState(() => trial = value),
             onTrialLengthChanged: (_) {},
             onPriceChanged: (_) {},
+            onCurrencyTap: () {},
           ),
         ),
       ),

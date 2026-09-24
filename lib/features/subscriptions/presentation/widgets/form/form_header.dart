@@ -5,29 +5,38 @@ import 'package:lapse/core/theme/theme.dart';
 import 'package:lapse/core/widgets/widgets.dart';
 import 'package:lapse/features/catalog/presentation/providers/catalog_providers.dart';
 import 'package:lapse/features/subscriptions/domain/validation/subscription_field.dart';
-import 'package:lapse/features/subscriptions/presentation/form/subscription_form_state.dart';
+import 'package:lapse/features/subscriptions/presentation/form/subscription_form_args.dart';
+import 'package:lapse/features/subscriptions/presentation/form/subscription_form_controller.dart';
 
 class FormHeader extends ConsumerWidget {
   const FormHeader({
-    required this.state,
+    required this.args,
     required this.nameController,
-    required this.onNameChanged,
     required this.onBack,
     this.nameFocusNode,
     super.key,
   });
 
-  final SubscriptionFormState state;
+  final SubscriptionFormArgs args;
   final TextEditingController nameController;
-  final ValueChanged<String> onNameChanged;
   final VoidCallback onBack;
   final FocusNode? nameFocusNode;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final provider = subscriptionFormProvider(args);
+    final (:name, :key, :category, :error) = ref.watch(
+      provider.select(
+        (s) => (
+          name: s.name,
+          key: s.catalogKey,
+          category: s.category,
+          error: s.errors[SubscriptionField.name],
+        ),
+      ),
+    );
     final lapse = context.lapse;
     final c = lapse.colors;
-    final key = state.catalogKey;
     final service = key == null
         ? null
         : ref.watch(catalogServiceByKeyProvider(key));
@@ -38,8 +47,7 @@ class FormHeader extends ConsumerWidget {
       fontSize: 22,
       fontWeight: FontWeight.w700,
     );
-    final error = state.errors[SubscriptionField.name];
-    final shownName = state.name.trim().isEmpty ? '?' : state.name;
+    final shownName = name.trim().isEmpty ? '?' : name;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -82,7 +90,7 @@ class FormHeader extends ConsumerWidget {
                   child: TextField(
                     controller: nameController,
                     focusNode: nameFocusNode,
-                    onChanged: onNameChanged,
+                    onChanged: ref.read(provider.notifier).setName,
                     textCapitalization: TextCapitalization.words,
                     textInputAction: TextInputAction.next,
                     style: nameStyle,
@@ -98,7 +106,7 @@ class FormHeader extends ConsumerWidget {
                   ),
                 ),
                 Text(
-                  state.category ?? 'Custom subscription',
+                  category ?? 'Custom subscription',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: lapse.text.meta.copyWith(fontSize: 14),

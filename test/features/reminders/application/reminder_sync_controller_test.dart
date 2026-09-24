@@ -4,7 +4,9 @@ import 'package:lapse/core/domain/calendar_date.dart';
 import 'package:lapse/features/reminders/application/reminder_providers.dart';
 import 'package:lapse/features/reminders/application/reminder_sync_controller.dart';
 import 'package:lapse/features/reminders/application/reminder_sync_result.dart';
+import 'package:lapse/features/reminders/data/memory_reminder_plan_store.dart';
 import 'package:lapse/features/reminders/data/reminder_permission.dart';
+import 'package:lapse/features/reminders/data/reminder_plan_store_provider.dart';
 import 'package:lapse/features/settings/presentation/providers/settings_providers.dart';
 
 import '../../../helpers/fake_notification_gateway.dart';
@@ -13,6 +15,15 @@ import 'reminder_test_support.dart';
 
 void main() {
   const settle = ReminderSyncController.debounce;
+  late MemoryReminderPlanStore store;
+
+  setUp(() => store = MemoryReminderPlanStore());
+
+  int syncs(ReminderHarness h) =>
+      h.gateway.calls.where((c) => c == 'canScheduleExact').length;
+
+  int schedules(ReminderHarness h) =>
+      h.gateway.calls.where((c) => c == 'schedule').length;
 
   ReminderHarness harness({
     ReminderPermission permission = ReminderPermission.granted,
@@ -27,7 +38,9 @@ void main() {
   }
 
   ProviderContainer start(ReminderHarness h) {
-    final container = h.container();
+    final container = h.container([
+      reminderPlanStoreProvider.overrideWithValue(store),
+    ]);
     addTearDown(container.dispose);
     container.listen(reminderSyncProvider, (_, _) {});
     return container;
@@ -42,12 +55,12 @@ void main() {
     await tester.pump(settle);
     await tester.pump();
 
-    expect(h.gateway.cancelAllCount, 1);
-    expect(h.gateway.scheduled, hasLength(2));
+    expect(syncs(h), 1);
+    expect(h.gateway.scheduled, hasLength(4));
     expect(
       container.read(reminderSyncProvider),
       ReminderSyncResult(
-        scheduled: 2,
+        scheduled: 4,
         exact: true,
         syncedAt: DateTime(2026, 9, 19, 10),
       ),
@@ -61,7 +74,7 @@ void main() {
     start(h);
     await tester.pump(settle);
     await tester.pump();
-    expect(h.gateway.cancelAllCount, 1);
+    expect(syncs(h), 1);
 
     for (var i = 2; i <= 4; i++) {
       await h.repository.upsert(
@@ -72,13 +85,13 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 100));
     }
-    expect(h.gateway.cancelAllCount, 1);
+    expect(syncs(h), 1);
 
     await tester.pump(settle);
     await tester.pump();
 
-    expect(h.gateway.cancelAllCount, 2);
-    expect(h.gateway.scheduled, hasLength(8));
+    expect(syncs(h), 2);
+    expect(h.gateway.scheduled, hasLength(16));
   });
 
   testWidgets('deleting a subscription removes its reminders', (
@@ -94,7 +107,7 @@ void main() {
     await tester.pump();
 
     expect(h.gateway.scheduled, isEmpty);
-    expect(h.gateway.cancelAllCount, 2);
+    expect(syncs(h), 2);
   });
 
   testWidgets('does nothing without permission and syncs once granted', (
@@ -105,7 +118,7 @@ void main() {
     await tester.pump(settle);
     await tester.pump();
 
-    expect(h.gateway.cancelAllCount, 0);
+    expect(syncs(h), 0);
     expect(h.gateway.scheduled, isEmpty);
     expect(container.read(reminderSyncProvider), isNull);
 
@@ -114,8 +127,8 @@ void main() {
     await tester.pump(settle);
     await tester.pump();
 
-    expect(h.gateway.cancelAllCount, 1);
-    expect(h.gateway.scheduled, hasLength(2));
+    expect(syncs(h), 1);
+    expect(h.gateway.scheduled, hasLength(4));
   });
 
   testWidgets('granting through request syncs right away', (tester) async {
@@ -126,11 +139,11 @@ void main() {
     await container.read(notificationPermissionProvider.notifier).request();
     await tester.pump();
 
-    expect(h.gateway.cancelAllCount, 1);
-    expect(h.gateway.scheduled, hasLength(2));
+    expect(syncs(h), 1);
+    expect(h.gateway.scheduled, hasLength(4));
 
     await tester.pump(settle);
-    expect(h.gateway.cancelAllCount, 1);
+    expect(syncs(h), 1);
   });
 
   testWidgets('changing the reminder time re-syncs', (tester) async {
@@ -145,12 +158,14 @@ void main() {
     await tester.pump(settle);
     await tester.pump();
 
-    expect(h.gateway.cancelAllCount, 2);
+    expect(syncs(h), 2);
     expect(
       h.gateway.scheduledReminders.map((r) => r.fireAt),
       unorderedEquals([
         DateTime(2026, 9, 24, 20, 30),
         DateTime(2026, 9, 30, 20, 30),
+        DateTime(2026, 10, 25, 20, 30),
+        DateTime(2026, 10, 31, 20, 30),
       ]),
     );
   });
@@ -167,15 +182,59 @@ void main() {
         .syncNow();
     await tester.pump();
 
-    expect(result?.scheduled, 2);
-    expect(h.gateway.cancelAllCount, 1);
+    expect(result?.scheduled, 4);
+    expect(syncs(h), 1);
     expect(
       await container.read(pendingReminderIdsProvider.future),
-      hasLength(2),
+      hasLength(4),
     );
 
     await tester.pump(settle);
-    expect(h.gateway.cancelAllCount, 1);
+    expect(syncs(h), 1);
+  });
+
+  testWidgets('a repeated sync keeps the stored plan and reschedules nothing', (
+    tester,
+  ) async {
+    final h = harness();
+    final container = start(h);
+    await tester.pump(settle);
+    await tester.pump();
+    expect(schedules(h), 4);
+    expect(store.plan, hasLength(4));
+
+    await container.read(reminderSyncProvider.notifier).syncNow();
+
+    expect(syncs(h), 2);
+    expect(schedules(h), 4);
+    expect(h.gateway.cancelled, isEmpty);
+    expect(h.gateway.cancelAllCount, 0);
+  });
+
+  testWidgets('losing permission forgets the plan so a grant reschedules', (
+    tester,
+  ) async {
+    final h = harness();
+    final container = start(h);
+    await tester.pump(settle);
+    await tester.pump();
+    expect(store.plan, hasLength(4));
+
+    h.gateway
+      ..permissionResult = ReminderPermission.denied
+      ..scheduled.clear();
+    await container.read(notificationPermissionProvider.notifier).refresh();
+    await container.read(reminderSyncProvider.notifier).syncNow();
+    expect(store.plan, isEmpty);
+
+    h.gateway.permissionResult = ReminderPermission.granted;
+    await container.read(notificationPermissionProvider.notifier).refresh();
+    await tester.pump();
+
+    expect(schedules(h), 8);
+    expect(h.gateway.scheduled, hasLength(4));
+    expect(store.plan, hasLength(4));
+    await tester.pump(settle);
   });
 
   testWidgets('syncNow without permission returns null', (tester) async {
@@ -187,7 +246,7 @@ void main() {
         .syncNow();
 
     expect(result, isNull);
-    expect(h.gateway.cancelAllCount, 0);
+    expect(syncs(h), 0);
     await tester.pump(settle);
   });
 
@@ -199,7 +258,7 @@ void main() {
     await tester.pump();
 
     final planned = container.read(plannedRemindersProvider).requireValue;
-    expect(planned, hasLength(2));
+    expect(planned, hasLength(4));
     expect(planned.first.fireAt, DateTime(2026, 9, 24, 9));
     await tester.pump(settle);
   });

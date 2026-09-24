@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:lapse/app/router/routes.dart';
-import 'package:lapse/core/providers/clock_providers.dart';
 import 'package:lapse/core/theme/theme.dart';
 import 'package:lapse/core/widgets/widgets.dart';
 import 'package:lapse/features/subscriptions/presentation/form/subscription_form_args.dart';
@@ -16,10 +15,12 @@ import 'package:lapse/features/subscriptions/presentation/widgets/currency_picke
 import 'package:lapse/features/subscriptions/presentation/widgets/form/billing_cycle_section.dart';
 import 'package:lapse/features/subscriptions/presentation/widgets/form/details_section.dart';
 import 'package:lapse/features/subscriptions/presentation/widgets/form/form_header.dart';
+import 'package:lapse/features/subscriptions/presentation/widgets/form/form_pop_scope.dart';
+import 'package:lapse/features/subscriptions/presentation/widgets/form/form_save_bar.dart';
 import 'package:lapse/features/subscriptions/presentation/widgets/form/next_billing_date_section.dart';
 import 'package:lapse/features/subscriptions/presentation/widgets/form/price_section.dart';
 import 'package:lapse/features/subscriptions/presentation/widgets/form/reminders_section.dart';
-import 'package:lapse/features/subscriptions/presentation/widgets/form/trial_block.dart';
+import 'package:lapse/features/subscriptions/presentation/widgets/form/trial_section.dart';
 
 class AddEditSubscriptionScreen extends ConsumerStatefulWidget {
   const AddEditSubscriptionScreen({required this.args, super.key});
@@ -155,26 +156,35 @@ class _AddEditSubscriptionScreenState
     Navigator.of(context).pop();
   }
 
-  Future<void> _pickCurrency(String current) async {
+  Future<void> _pickCurrency() async {
+    final current = ref.read(subscriptionFormProvider(_args)).currency;
     final code = await showCurrencyPicker(context, current);
     if (code != null && mounted) _form.setCurrency(code);
   }
+
+  void _onCurrencyTap() => unawaited(_pickCurrency());
+
+  void _onSave() => unawaited(_save());
 
   void _back() => unawaited(Navigator.of(context).maybePop());
 
   @override
   Widget build(BuildContext context) {
-    final form = ref.watch(subscriptionFormProvider(_args));
-    final dirty = ref.read(subscriptionFormProvider(_args).notifier).isDirty;
+    final (:isLoading, :loadError) = ref.watch(
+      subscriptionFormProvider(
+        _args,
+      ).select((s) => (isLoading: s.isLoading, loadError: s.loadError)),
+    );
     final c = context.lapse.colors;
     final title = _args.isEdit ? 'Edit subscription' : 'Add subscription';
 
     final Widget body;
-    if (form.isLoading) {
+    Widget? saveBar;
+    if (isLoading) {
       body = _statusBody(
         const Center(child: CircularProgressIndicator()),
       );
-    } else if (form.loadError != null) {
+    } else if (loadError != null) {
       body = _statusBody(
         Center(
           child: Padding(
@@ -183,7 +193,7 @@ class _AddEditSubscriptionScreenState
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  form.loadError!,
+                  loadError,
                   textAlign: TextAlign.center,
                   style: context.lapse.text.bodyMuted,
                 ),
@@ -195,14 +205,16 @@ class _AddEditSubscriptionScreenState
         ),
       );
     } else {
-      body = _formBody(form);
+      body = _formBody();
+      saveBar = KeyboardInset(
+        child: FormSaveBar(args: _args, onSave: _onSave),
+      );
     }
 
-    return PopScope(
-      canPop: !dirty || _leaving,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) unawaited(_confirmDiscard());
-      },
+    return FormPopScope(
+      args: _args,
+      leaving: _leaving,
+      onBlockedPop: () => unawaited(_confirmDiscard()),
       child: Semantics(
         scopesRoute: true,
         namesRoute: true,
@@ -211,6 +223,7 @@ class _AddEditSubscriptionScreenState
         child: Scaffold(
           backgroundColor: c.background,
           body: SafeArea(bottom: false, child: body),
+          bottomNavigationBar: saveBar,
         ),
       ),
     );
@@ -231,18 +244,15 @@ class _AddEditSubscriptionScreenState
     ],
   );
 
-  Widget _formBody(SubscriptionFormState form) {
+  Widget _formBody() {
     final c = context.lapse.colors;
-    final today = ref.watch(todayProvider);
-    final notifier = _form;
 
     return Column(
       children: [
         FormHeader(
-          state: form,
+          args: _args,
           nameController: _name,
           nameFocusNode: _nameFocus,
-          onNameChanged: notifier.setName,
           onBack: _back,
         ),
         Expanded(
@@ -258,52 +268,32 @@ class _AddEditSubscriptionScreenState
                   Space.xxxl,
                 ),
                 children: [
-                  TrialBlock(
-                    state: form,
+                  TrialSection(
+                    args: _args,
                     priceController: _price,
-                    onTrialChanged: (on) => notifier.setTrial(on: on),
-                    onTrialLengthChanged: notifier.setTrialLength,
-                    onPriceChanged: notifier.setPrice,
+                    onCurrencyTap: _onCurrencyTap,
                   ),
                   const SizedBox(height: Space.xl),
-                  if (!form.isTrial) ...[
-                    PriceSection(
-                      state: form,
-                      controller: _price,
-                      focusNode: _priceFocus,
-                      onChanged: notifier.setPrice,
-                      onCurrencyTap: () =>
-                          unawaited(_pickCurrency(form.currency)),
-                    ),
-                    const SizedBox(height: Space.xl),
-                  ],
+                  PriceSection(
+                    args: _args,
+                    controller: _price,
+                    focusNode: _priceFocus,
+                    onCurrencyTap: _onCurrencyTap,
+                  ),
                   BillingCycleSection(
-                    state: form,
+                    args: _args,
                     customDaysController: _customDays,
-                    onPeriodChanged: notifier.setPeriod,
-                    onCustomDaysChanged: notifier.setCustomDays,
                   ),
                   const SizedBox(height: Space.lg),
-                  NextBillingDateSection(
-                    state: form,
-                    today: today,
-                    onChanged: notifier.setNextBillingDate,
-                  ),
+                  NextBillingDateSection(args: _args),
                   const SizedBox(height: Space.xl),
-                  RemindersSection(
-                    state: form,
-                    onToggle: notifier.toggleReminder,
-                  ),
+                  RemindersSection(args: _args),
                   const SizedBox(height: Space.lg),
                   DetailsSection(
-                    state: form,
+                    args: _args,
                     cancelUrlController: _cancelUrl,
                     paymentMethodController: _paymentMethod,
                     notesController: _notes,
-                    onCancelUrlChanged: notifier.setCancelUrl,
-                    onCategoryChanged: notifier.setCategory,
-                    onPaymentMethodChanged: notifier.setPaymentMethod,
-                    onNotesChanged: notifier.setNotes,
                   ),
                 ],
               ),
@@ -330,32 +320,7 @@ class _AddEditSubscriptionScreenState
             ],
           ),
         ),
-        _saveBar(form),
       ],
-    );
-  }
-
-  Widget _saveBar(SubscriptionFormState form) {
-    final c = context.lapse.colors;
-    return ColoredBox(
-      color: c.background,
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            Space.xl,
-            14,
-            Space.xl,
-            Space.md,
-          ),
-          child: LapseButton(
-            label: 'Save',
-            expand: true,
-            loading: form.isSaving,
-            onPressed: form.canSave ? () => unawaited(_save()) : null,
-          ),
-        ),
-      ),
     );
   }
 }

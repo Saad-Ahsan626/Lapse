@@ -1,11 +1,14 @@
 import 'package:lapse/core/domain/calendar_date.dart';
 import 'package:lapse/features/subscriptions/domain/entities/charge.dart';
 import 'package:lapse/features/subscriptions/domain/entities/subscription.dart';
+import 'package:lapse/features/subscriptions/domain/repositories/roll_over_write.dart';
 
 abstract interface class SubscriptionRepository {
   Stream<List<Subscription>> watchAll();
 
   Stream<Subscription?> watchById(String id);
+
+  Future<void> refresh();
 
   Future<List<Subscription>> getAll();
 
@@ -17,9 +20,17 @@ abstract interface class SubscriptionRepository {
 
   Future<List<Charge>> chargesFor(String subscriptionId);
 
+  Future<List<Charge>> allCharges();
+
   Future<List<Charge>> chargesBetween(CalendarDate from, CalendarDate to);
 
-  Future<void> applyRollOver(Subscription updated, List<Charge> charges);
+  Future<bool> applyRollOver(
+    Subscription updated,
+    List<Charge> charges, {
+    CalendarDate? expectedNextBillingDate,
+  });
+
+  Future<int> applyRollOvers(List<RollOverWrite> writes);
 
   Future<void> replaceAll(
     List<Subscription> subscriptions,

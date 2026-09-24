@@ -18,6 +18,10 @@ class HomeHeroCard extends StatelessWidget {
     return '+ ${parts.join(' · ')} in other currencies';
   }
 
+  static double heroLineHeight(TextStyle style, TextScaler scaler) =>
+      (scaler.scale(style.fontSize ?? 14) * (style.height ?? 1.2))
+          .ceilToDouble();
+
   @override
   Widget build(BuildContext context) {
     final lapse = context.lapse;
@@ -29,6 +33,11 @@ class HomeHeroCard extends StatelessWidget {
     final yearlyAmount = formatMoney(summary.yearly);
     final yearly = '$yearlyAmount / year';
     final monthly = formatMoney(summary.thisMonth);
+    final heroStyle = text.moneyHero.copyWith(color: white);
+    final lineHeight = heroLineHeight(
+      heroStyle,
+      MediaQuery.textScalerOf(context),
+    );
 
     return DecoratedBox(
       decoration: BoxDecoration(borderRadius: radius, boxShadow: c.heroShadow),
@@ -75,13 +84,17 @@ class HomeHeroCard extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 6),
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.centerLeft,
-                            child: CountUpText(
-                              value: summary.thisMonth.minor,
-                              format: (v) => formatMoney(Money(v, currency)),
-                              style: text.moneyHero.copyWith(color: white),
+                          SizedBox(
+                            width: double.infinity,
+                            height: lineHeight,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: CountUpText(
+                                value: summary.thisMonth.minor,
+                                format: (v) => formatMoney(Money(v, currency)),
+                                style: heroStyle,
+                              ),
                             ),
                           ),
                         ],

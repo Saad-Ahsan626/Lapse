@@ -60,10 +60,19 @@ void main() {
       );
 
   double opacityOf(WidgetTester tester, String name) => tester
-      .widget<Opacity>(
-        find.ancestor(of: find.text(name), matching: find.byType(Opacity)).last,
+      .widget<FadeTransition>(
+        find
+            .descendant(
+              of: find.ancestor(
+                of: find.text(name),
+                matching: find.byType(StaggeredEntrance),
+              ),
+              matching: find.byType(FadeTransition),
+            )
+            .first,
       )
-      .opacity;
+      .opacity
+      .value;
 
   Future<void> selectTab(WidgetTester tester, String label) async {
     await tester.tap(find.text(label, findRichText: true));

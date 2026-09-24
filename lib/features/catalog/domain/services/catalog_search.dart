@@ -46,20 +46,22 @@ class CatalogSearch {
   List<CatalogService> search(List<CatalogService> services, String query) {
     final needle = normalize(query);
     if (needle.isEmpty) {
-      final rest = services.where((s) => s.popularRank == null).toList()
-        ..sort(_byName);
+      final rest = _sortedByName(
+        services.where((s) => s.popularRank == null),
+      );
       return [...popular(services), ...rest];
     }
-    final scored = <(CatalogService, int)>[];
+    final scored = <(CatalogService, String, int)>[];
     for (final service in services) {
-      final score = _score(service, needle);
+      final name = normalize(service.name);
+      final score = _score(service, name, needle);
       if (score != null) {
-        scored.add((service, score));
+        scored.add((service, name, score));
       }
     }
     scored.sort((a, b) {
-      final byScore = a.$2.compareTo(b.$2);
-      return byScore != 0 ? byScore : _byName(a.$1, b.$1);
+      final byScore = a.$3.compareTo(b.$3);
+      return byScore != 0 ? byScore : a.$2.compareTo(b.$2);
     });
     return [for (final entry in scored) entry.$1];
   }
@@ -68,8 +70,16 @@ class CatalogSearch {
       services.where((s) => s.popularRank != null).toList()
         ..sort((a, b) => a.popularRank!.compareTo(b.popularRank!));
 
-  int? _score(CatalogService service, String needle) {
-    final name = normalize(service.name);
+  static List<CatalogService> _sortedByName(
+    Iterable<CatalogService> services,
+  ) {
+    final named = [
+      for (final service in services) (service, normalize(service.name)),
+    ]..sort((a, b) => a.$2.compareTo(b.$2));
+    return [for (final entry in named) entry.$1];
+  }
+
+  int? _score(CatalogService service, String name, String needle) {
     if (name == needle) {
       return 0;
     }
@@ -91,7 +101,4 @@ class CatalogSearch {
     }
     return null;
   }
-
-  static int _byName(CatalogService a, CatalogService b) =>
-      normalize(a.name).compareTo(normalize(b.name));
 }

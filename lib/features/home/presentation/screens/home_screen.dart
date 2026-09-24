@@ -3,22 +3,21 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lapse/core/providers/clock_providers.dart';
 import 'package:lapse/core/theme/theme.dart';
-import 'package:lapse/core/widgets/widgets.dart';
 import 'package:lapse/features/catalog/presentation/catalog_picker.dart';
+import 'package:lapse/features/home/presentation/widgets/home_add_fab.dart';
 import 'package:lapse/features/home/presentation/widgets/home_empty_state.dart';
 import 'package:lapse/features/home/presentation/widgets/home_error.dart';
 import 'package:lapse/features/home/presentation/widgets/home_header.dart';
-import 'package:lapse/features/home/presentation/widgets/home_hero_card.dart';
-import 'package:lapse/features/home/presentation/widgets/home_hero_placeholder.dart';
+import 'package:lapse/features/home/presentation/widgets/home_hero_section.dart';
 import 'package:lapse/features/home/presentation/widgets/home_loading.dart';
-import 'package:lapse/features/home/presentation/widgets/trials_strip.dart';
-import 'package:lapse/features/home/presentation/widgets/upcoming_section.dart';
+import 'package:lapse/features/home/presentation/widgets/home_trials_section.dart';
+import 'package:lapse/features/home/presentation/widgets/home_upcoming_section.dart';
 import 'package:lapse/features/reminders/presentation/widgets/reminders_off_banner.dart';
 import 'package:lapse/features/subscriptions/presentation/providers/home_providers.dart';
 import 'package:lapse/features/subscriptions/presentation/providers/subscription_list_providers.dart';
-import 'package:lapse/features/subscriptions/presentation/providers/upcoming_charges.dart';
+
+enum _HomePhase { loading, error, empty, populated }
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -34,9 +33,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _openPicker() async {
     if (_pickerOpen) return;
-    setState(() => _pickerOpen = true);
+    _pickerOpen = true;
     await showCatalogPicker(context);
-    if (mounted) setState(() => _pickerOpen = false);
+    _pickerOpen = false;
   }
 
   void _add() => unawaited(_openPicker());
@@ -45,12 +44,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final subscriptions = ref.watch(subscriptionsProvider);
-    final populated =
-        !subscriptions.hasError && (subscriptions.value?.isNotEmpty ?? false);
+    final phase = ref.watch(
+      subscriptionsProvider.select(
+        (value) => value.when(
+          data: (all) => all.isEmpty ? _HomePhase.empty : _HomePhase.populated,
+          loading: () => _HomePhase.loading,
+          error: (_, _) => _HomePhase.error,
+        ),
+      ),
+    );
+    final populated = phase == _HomePhase.populated;
+    final summaryFailed =
+        populated &&
+        ref.watch(spendingSummaryProvider.select((value) => value.hasError));
 
-    final body = subscriptions.when(
-      data: (all) => [
+    final body = switch (phase) {
+      _HomePhase.loading => const [SliverToBoxAdapter(child: HomeLoading())],
+      _HomePhase.error => [_errorSliver()],
+      _ => [
         const SliverToBoxAdapter(
           child: RemindersOffBanner(
             padding: EdgeInsets.fromLTRB(
@@ -61,20 +72,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
         ),
-        if (all.isEmpty)
+        if (!populated)
           _CenteredSliver(child: HomeEmptyState(onAdd: _add))
+        else if (summaryFailed)
+          _errorSliver()
         else
-          ..._populatedSlivers(),
+          ..._populatedSlivers,
       ],
-      loading: () => const [SliverToBoxAdapter(child: HomeLoading())],
-      error: (_, _) => [_errorSliver()],
-    );
+    };
 
     return Scaffold(
       backgroundColor: context.lapse.colors.background,
-      floatingActionButton: populated
-          ? LapseFab(open: _pickerOpen, onPressed: _add)
-          : null,
+      floatingActionButton: populated ? const HomeAddFab() : null,
       body: SafeArea(
         bottom: false,
         child: CustomScrollView(
@@ -89,50 +98,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _errorSliver() => _CenteredSliver(child: HomeError(onRetry: _retry));
 
-  List<Widget> _populatedSlivers() {
-    final summary = ref.watch(spendingSummaryProvider);
-    if (summary.hasError) return [_errorSliver()];
-    final today = ref.watch(todayProvider);
-    final trials = ref.watch(trialsEndingProvider).value ?? const [];
-    final upcoming =
-        ref.watch(upcomingChargesProvider).value ??
-        const UpcomingCharges(items: [], isThisMonth: false);
-    final bottomInset = MediaQuery.paddingOf(context).bottom;
+  static const List<Widget> _populatedSlivers = [
+    SliverPadding(
+      padding: EdgeInsets.symmetric(horizontal: Space.screen),
+      sliver: SliverToBoxAdapter(child: HomeHeroSection()),
+    ),
+    SliverToBoxAdapter(child: SizedBox(height: HomeScreen.sectionGap)),
+    SliverToBoxAdapter(
+      child: HomeTrialsSection(gap: HomeScreen.sectionGap),
+    ),
+    SliverPadding(
+      padding: EdgeInsets.symmetric(horizontal: Space.screen),
+      sliver: SliverToBoxAdapter(child: HomeUpcomingSection()),
+    ),
+    SliverToBoxAdapter(child: _FabClearance()),
+  ];
+}
 
-    return [
-      SliverPadding(
-        padding: const EdgeInsets.symmetric(horizontal: Space.screen),
-        sliver: SliverToBoxAdapter(
-          child: switch (summary.value) {
-            final value? => HomeHeroCard(summary: value),
-            null => const HomeHeroPlaceholder(),
-          },
-        ),
-      ),
-      const SliverToBoxAdapter(child: SizedBox(height: HomeScreen.sectionGap)),
-      if (trials.isNotEmpty) ...[
-        SliverToBoxAdapter(
-          child: TrialsStrip(trials: trials, today: today),
-        ),
-        const SliverToBoxAdapter(
-          child: SizedBox(height: HomeScreen.sectionGap),
-        ),
-      ],
-      SliverPadding(
-        padding: const EdgeInsets.symmetric(horizontal: Space.screen),
-        sliver: SliverToBoxAdapter(
-          child: UpcomingSection(
-            upcoming: upcoming,
-            today: today,
-            hasTrials: trials.isNotEmpty,
-          ),
-        ),
-      ),
-      SliverToBoxAdapter(
-        child: SizedBox(height: Sizes.fab + Space.xxxl + bottomInset),
-      ),
-    ];
-  }
+class _FabClearance extends StatelessWidget {
+  const _FabClearance();
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    height: Sizes.fab + Space.xxxl + MediaQuery.paddingOf(context).bottom,
+  );
 }
 
 class _CenteredSliver extends StatelessWidget {

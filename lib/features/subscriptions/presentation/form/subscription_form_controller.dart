@@ -49,6 +49,9 @@ class SubscriptionFormController extends Notifier<SubscriptionFormState> {
 
   CalendarDate get _today => ref.read(todayProvider);
 
+  CalendarDate get _trialStart =>
+      state.isEdit && (_existing?.isTrial ?? false) ? state.startDate : _today;
+
   @override
   SubscriptionFormState build() {
     _existing = null;
@@ -125,7 +128,7 @@ class SubscriptionFormController extends Notifier<SubscriptionFormState> {
           isTrial: true,
           startDate: start,
           trialLengthDays: length,
-          nextBillingDate: today.addDays(length),
+          nextBillingDate: _trialStart.addDays(length),
         ),
         clear: SubscriptionField.nextBillingDate,
       );
@@ -146,7 +149,7 @@ class SubscriptionFormController extends Notifier<SubscriptionFormState> {
     _update(
       state.copyWith(
         trialLengthDays: days,
-        nextBillingDate: _today.addDays(days),
+        nextBillingDate: _trialStart.addDays(days),
       ),
       clear: SubscriptionField.nextBillingDate,
     );
@@ -154,7 +157,7 @@ class SubscriptionFormController extends Notifier<SubscriptionFormState> {
 
   void setNextBillingDate(CalendarDate date) {
     if (state.isTrial) {
-      final length = _today.daysUntil(date);
+      final length = _trialStart.daysUntil(date);
       _update(
         state.copyWith(
           nextBillingDate: date,
@@ -206,8 +209,8 @@ class SubscriptionFormController extends Notifier<SubscriptionFormState> {
     try {
       final saved = await saveSubscription(draft);
       if (ref.mounted) {
-        state = state.copyWith(isSaving: false);
-        _initial = state;
+        _initial = state.copyWith(isSaving: false);
+        state = _initial;
       }
       return saved;
     } on ValidationException<SubscriptionField> catch (e) {

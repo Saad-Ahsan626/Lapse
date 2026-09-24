@@ -1,9 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lapse/core/domain/calendar_date.dart';
 import 'package:lapse/features/reminders/domain/planned_reminder.dart';
+import 'package:lapse/features/reminders/domain/reminder_content.dart';
 import 'package:lapse/features/reminders/domain/reminder_id.dart';
 import 'package:lapse/features/reminders/domain/reminder_kind.dart';
 import 'package:lapse/features/reminders/domain/reminder_planner.dart';
+import 'package:lapse/features/subscriptions/domain/entities/billing_period.dart';
 import 'package:lapse/features/subscriptions/domain/entities/subscription.dart';
 import 'package:lapse/features/subscriptions/domain/entities/subscription_status.dart';
 
@@ -14,7 +16,7 @@ void main() {
   const nineAm = 9 * 60;
   final now = DateTime(2026, 9, 21, 12);
 
-  List<PlannedReminder> planFor(
+  List<PlannedReminder> planAll(
     Subscription subscription, {
     int reminderMinutes = nineAm,
     DateTime? at,
@@ -24,6 +26,22 @@ void main() {
     now: at ?? now,
   );
 
+  List<PlannedReminder> firstCycle(
+    Subscription subscription, {
+    int reminderMinutes = nineAm,
+    DateTime? at,
+  }) => [
+    for (final reminder in planAll(
+      subscription,
+      reminderMinutes: reminderMinutes,
+      at: at,
+    ))
+      if (!CalendarDate.fromDateTime(
+        reminder.fireAt,
+      ).isAfter(subscription.nextBillingDate))
+        reminder,
+  ];
+
   List<DateTime> times(List<PlannedReminder> reminders) => [
     for (final r in reminders) r.fireAt,
   ];
@@ -31,7 +49,7 @@ void main() {
   group('offsets', () {
     test('[7, 1] fires at 09:00 seven days and one day before', () {
       final sub = subscriptionFixture(name: 'Spotify');
-      final reminders = planFor(sub);
+      final reminders = firstCycle(sub);
       expect(times(reminders), [
         DateTime(2026, 9, 24, 9),
         DateTime(2026, 9, 30, 9),
@@ -50,29 +68,31 @@ void main() {
     });
 
     test('offset order does not matter', () {
-      final a = planFor(subscriptionFixture(reminderOffsets: [1, 7]));
-      final b = planFor(subscriptionFixture());
+      final a = firstCycle(subscriptionFixture(reminderOffsets: [1, 7]));
+      final b = firstCycle(subscriptionFixture());
       expect(a, b);
     });
 
     test('[0] fires on the charge day', () {
-      final reminders = planFor(subscriptionFixture(reminderOffsets: [0]));
+      final reminders = firstCycle(subscriptionFixture(reminderOffsets: [0]));
       expect(times(reminders), [DateTime(2026, 10, 1, 9)]);
       expect(reminders.single.title, 'Spotify Premium renews today');
       expect(reminders.single.body, 'Rs 299 today. Tap to see details.');
     });
 
     test('[] produces nothing', () {
-      expect(planFor(subscriptionFixture(reminderOffsets: [])), isEmpty);
+      expect(firstCycle(subscriptionFixture(reminderOffsets: [])), isEmpty);
     });
 
     test('negative offsets are ignored', () {
-      final reminders = planFor(subscriptionFixture(reminderOffsets: [-1, 1]));
+      final reminders = firstCycle(
+        subscriptionFixture(reminderOffsets: [-1, 1]),
+      );
       expect(times(reminders), [DateTime(2026, 9, 30, 9)]);
     });
 
     test('offsets further back than today are skipped', () {
-      final reminders = planFor(
+      final reminders = firstCycle(
         subscriptionFixture(reminderOffsets: [30, 14, 3]),
       );
       expect(times(reminders), [DateTime(2026, 9, 28, 9)]);
@@ -81,7 +101,7 @@ void main() {
 
   group('time of day', () {
     test('custom time 20:30', () {
-      final reminders = planFor(
+      final reminders = firstCycle(
         subscriptionFixture(),
         reminderMinutes: 20 * 60 + 30,
       );
@@ -92,18 +112,18 @@ void main() {
     });
 
     test('midnight', () {
-      final reminders = planFor(subscriptionFixture(), reminderMinutes: 0);
+      final reminders = firstCycle(subscriptionFixture(), reminderMinutes: 0);
       expect(times(reminders).first, DateTime(2026, 9, 24));
     });
 
     test('out of range minutes are clamped to the same day', () {
       final sub = subscriptionFixture(reminderOffsets: [1]);
       expect(
-        times(planFor(sub, reminderMinutes: 5000)),
+        times(firstCycle(sub, reminderMinutes: 5000)),
         [DateTime(2026, 9, 30, 23, 59)],
       );
       expect(
-        times(planFor(sub, reminderMinutes: -30)),
+        times(firstCycle(sub, reminderMinutes: -30)),
         [DateTime(2026, 9, 30)],
       );
     });
@@ -113,7 +133,7 @@ void main() {
         nextBillingDate: CalendarDate(2026, 9, 22),
         reminderOffsets: [1],
       );
-      expect(planFor(sub), isEmpty);
+      expect(firstCycle(sub), isEmpty);
     });
 
     test('later today is kept', () {
@@ -122,7 +142,7 @@ void main() {
         reminderOffsets: [1],
       );
       expect(
-        times(planFor(sub, reminderMinutes: 18 * 60)),
+        times(firstCycle(sub, reminderMinutes: 18 * 60)),
         [DateTime(2026, 9, 21, 18)],
       );
     });
@@ -132,8 +152,8 @@ void main() {
         nextBillingDate: CalendarDate(2026, 9, 22),
         reminderOffsets: [1],
       );
-      expect(planFor(sub, reminderMinutes: 12 * 60), isEmpty);
-      expect(planFor(sub, reminderMinutes: 12 * 60 + 1), hasLength(1));
+      expect(firstCycle(sub, reminderMinutes: 12 * 60), isEmpty);
+      expect(firstCycle(sub, reminderMinutes: 12 * 60 + 1), hasLength(1));
     });
 
     test('charge today with [0] later today is kept', () {
@@ -141,28 +161,28 @@ void main() {
         nextBillingDate: CalendarDate(2026, 9, 21),
         reminderOffsets: [0, 1],
       );
-      final reminders = planFor(sub, reminderMinutes: 19 * 60);
+      final reminders = firstCycle(sub, reminderMinutes: 19 * 60);
       expect(times(reminders), [DateTime(2026, 9, 21, 19)]);
       expect(reminders.single.title, 'Spotify Premium renews today');
     });
 
     test('a UTC now gives the same plan as local now', () {
       final sub = subscriptionFixture();
-      expect(planFor(sub, at: now.toUtc()), planFor(sub));
+      expect(planAll(sub, at: now.toUtc()), planAll(sub));
     });
   });
 
   group('status and kind', () {
     test('cancelled subscriptions produce nothing', () {
       final sub = subscriptionFixture(status: SubscriptionStatus.cancelled);
-      expect(planFor(sub), isEmpty);
+      expect(firstCycle(sub), isEmpty);
     });
 
     test('cancelled subscriptions ignore snooze', () {
       final sub = subscriptionFixture(
         status: SubscriptionStatus.cancelled,
       ).copyWith(snoozedUntil: DateTime(2026, 9, 22, 12).toUtc());
-      expect(planFor(sub), isEmpty);
+      expect(firstCycle(sub), isEmpty);
     });
 
     test('trials are trialEnding with trial wording', () {
@@ -172,7 +192,7 @@ void main() {
         isTrial: true,
         cancelUrl: 'netflix.com/cancel',
       );
-      final reminders = planFor(sub);
+      final reminders = firstCycle(sub);
       expect(
         reminders.every((r) => r.kind == ReminderKind.trialEnding),
         isTrue,
@@ -189,21 +209,23 @@ void main() {
       final withLink = subscriptionFixture(cancelUrl: 'spotify.com/account');
       final without = subscriptionFixture();
       final badLink = subscriptionFixture(cancelUrl: 'mailto:x@y.z');
-      expect(planFor(withLink).every((r) => r.hasCancelLink), isTrue);
-      expect(planFor(withLink).last.body, endsWith('Tap to cancel.'));
-      expect(planFor(without).any((r) => r.hasCancelLink), isFalse);
-      expect(planFor(badLink).any((r) => r.hasCancelLink), isFalse);
+      expect(firstCycle(withLink).every((r) => r.hasCancelLink), isTrue);
+      expect(firstCycle(withLink).last.body, endsWith('Tap to cancel.'));
+      expect(firstCycle(without).any((r) => r.hasCancelLink), isFalse);
+      expect(firstCycle(badLink).any((r) => r.hasCancelLink), isFalse);
     });
   });
 
   group('one per day', () {
     test('duplicate offsets [1, 1] give one reminder', () {
-      final reminders = planFor(subscriptionFixture(reminderOffsets: [1, 1]));
+      final reminders = firstCycle(
+        subscriptionFixture(reminderOffsets: [1, 1]),
+      );
       expect(times(reminders), [DateTime(2026, 9, 30, 9)]);
     });
 
     test('duplicates among others', () {
-      final reminders = planFor(
+      final reminders = firstCycle(
         subscriptionFixture(reminderOffsets: [7, 1, 7, 1, 0]),
       );
       expect(times(reminders), [
@@ -218,7 +240,7 @@ void main() {
       final sub = subscriptionFixture().copyWith(
         snoozedUntil: DateTime(2026, 9, 30, 8).toUtc(),
       );
-      final reminders = planFor(sub);
+      final reminders = firstCycle(sub);
       expect(times(reminders), [DateTime(2026, 9, 30, 8)]);
       expect(reminders.single.kind, ReminderKind.snoozed);
       expect(
@@ -234,7 +256,7 @@ void main() {
         nextBillingDate: CalendarDate(2027, 3, 1),
         reminderOffsets: [1],
       );
-      expect(times(planFor(sub)), [DateTime(2027, 2, 28, 9)]);
+      expect(times(firstCycle(sub)), [DateTime(2027, 2, 28, 9)]);
     });
 
     test('month end in a leap year', () {
@@ -242,7 +264,7 @@ void main() {
         nextBillingDate: CalendarDate(2028, 3, 1),
         reminderOffsets: [1],
       );
-      expect(times(planFor(sub)), [DateTime(2028, 2, 29, 9)]);
+      expect(times(firstCycle(sub)), [DateTime(2028, 2, 29, 9)]);
     });
 
     test('charge on leap day', () {
@@ -250,7 +272,7 @@ void main() {
         nextBillingDate: CalendarDate(2028, 2, 29),
         reminderOffsets: [7, 1, 0],
       );
-      final reminders = planFor(sub);
+      final reminders = firstCycle(sub);
       expect(times(reminders), [
         DateTime(2028, 2, 22, 9),
         DateTime(2028, 2, 28, 9),
@@ -264,7 +286,7 @@ void main() {
         nextBillingDate: CalendarDate(2027, 1, 3),
         reminderOffsets: [7],
       );
-      expect(times(planFor(sub)), [DateTime(2026, 12, 27, 9)]);
+      expect(times(firstCycle(sub)), [DateTime(2026, 12, 27, 9)]);
     });
 
     test('31st of a month', () {
@@ -272,7 +294,7 @@ void main() {
         nextBillingDate: CalendarDate(2026, 10, 31),
         reminderOffsets: [1],
       );
-      expect(times(planFor(sub)), [DateTime(2026, 10, 30, 9)]);
+      expect(times(firstCycle(sub)), [DateTime(2026, 10, 30, 9)]);
     });
   });
 
@@ -282,14 +304,14 @@ void main() {
         nextBillingDate: CalendarDate(2026, 9, 20),
         reminderOffsets: [0, 1, 7],
       );
-      expect(planFor(sub, reminderMinutes: 23 * 60), isEmpty);
+      expect(firstCycle(sub, reminderMinutes: 23 * 60), isEmpty);
     });
 
     test('overdue ignores snooze', () {
       final sub = subscriptionFixture(
         nextBillingDate: CalendarDate(2026, 9, 20),
       ).copyWith(snoozedUntil: DateTime(2026, 9, 21, 18).toUtc());
-      expect(planFor(sub), isEmpty);
+      expect(firstCycle(sub), isEmpty);
     });
   });
 
@@ -301,7 +323,7 @@ void main() {
         ).copyWith(snoozedUntil: until.toUtc());
 
     test('before every reminder adds one and keeps the rest', () {
-      final reminders = planFor(snoozed(DateTime(2026, 9, 22, 12)));
+      final reminders = firstCycle(snoozed(DateTime(2026, 9, 22, 12)));
       expect(times(reminders), [
         DateTime(2026, 9, 22, 12),
         DateTime(2026, 9, 24, 9),
@@ -321,7 +343,7 @@ void main() {
     });
 
     test('drops reminders before the snooze time', () {
-      final reminders = planFor(snoozed(DateTime(2026, 9, 25, 10)));
+      final reminders = firstCycle(snoozed(DateTime(2026, 9, 25, 10)));
       expect(times(reminders), [
         DateTime(2026, 9, 25, 10),
         DateTime(2026, 9, 30, 9),
@@ -331,7 +353,7 @@ void main() {
     });
 
     test('exactly at a reminder time replaces it', () {
-      final reminders = planFor(snoozed(DateTime(2026, 9, 24, 9)));
+      final reminders = firstCycle(snoozed(DateTime(2026, 9, 24, 9)));
       expect(times(reminders), [
         DateTime(2026, 9, 24, 9),
         DateTime(2026, 9, 30, 9),
@@ -340,21 +362,21 @@ void main() {
     });
 
     test('later on a reminder day replaces that day', () {
-      final reminders = planFor(snoozed(DateTime(2026, 9, 30, 15)));
+      final reminders = firstCycle(snoozed(DateTime(2026, 9, 30, 15)));
       expect(times(reminders), [DateTime(2026, 9, 30, 15)]);
       expect(reminders.single.kind, ReminderKind.snoozed);
       expect(reminders.single.title, 'Spotify Premium renews tomorrow');
     });
 
     test('on the charge day is allowed', () {
-      final reminders = planFor(snoozed(DateTime(2026, 10, 1, 15)));
+      final reminders = firstCycle(snoozed(DateTime(2026, 10, 1, 15)));
       expect(times(reminders), [DateTime(2026, 10, 1, 15)]);
       expect(reminders.single.title, 'Spotify Premium renews today');
       expect(reminders.single.body, 'Rs 299 today. Tap to cancel.');
     });
 
     test('after the charge day is ignored', () {
-      final reminders = planFor(snoozed(DateTime(2026, 10, 2, 9)));
+      final reminders = firstCycle(snoozed(DateTime(2026, 10, 2, 9)));
       expect(times(reminders), [
         DateTime(2026, 9, 24, 9),
         DateTime(2026, 9, 30, 9),
@@ -363,7 +385,7 @@ void main() {
     });
 
     test('in the past is ignored', () {
-      final reminders = planFor(snoozed(DateTime(2026, 9, 21, 11)));
+      final reminders = firstCycle(snoozed(DateTime(2026, 9, 21, 11)));
       expect(times(reminders), [
         DateTime(2026, 9, 24, 9),
         DateTime(2026, 9, 30, 9),
@@ -371,13 +393,13 @@ void main() {
     });
 
     test('exactly now is ignored', () {
-      final reminders = planFor(snoozed(now));
+      final reminders = firstCycle(snoozed(now));
       expect(reminders.any((r) => r.kind == ReminderKind.snoozed), isFalse);
       expect(reminders, hasLength(2));
     });
 
     test('works with no offsets', () {
-      final reminders = planFor(
+      final reminders = firstCycle(
         snoozed(DateTime(2026, 9, 22, 12), offsets: const []),
       );
       expect(times(reminders), [DateTime(2026, 9, 22, 12)]);
@@ -388,7 +410,7 @@ void main() {
       final sub = subscriptionFixture().copyWith(
         snoozedUntil: DateTime(2026, 9, 26, 7, 45),
       );
-      final reminders = planFor(sub);
+      final reminders = firstCycle(sub);
       expect(times(reminders), [
         DateTime(2026, 9, 26, 7, 45),
         DateTime(2026, 9, 30, 9),
@@ -401,7 +423,7 @@ void main() {
         priceMinor: 64900,
         isTrial: true,
       ).copyWith(snoozedUntil: DateTime(2026, 9, 30, 13).toUtc());
-      final reminder = planFor(sub).single;
+      final reminder = firstCycle(sub).single;
       expect(reminder.kind, ReminderKind.snoozed);
       expect(reminder.title, 'Netflix trial ends tomorrow');
       expect(
@@ -452,6 +474,11 @@ void main() {
           ('c', DateTime(2026, 9, 25, 9)),
           ('a', DateTime(2026, 9, 30, 9)),
           ('b', DateTime(2026, 9, 30, 9)),
+          ('c', DateTime(2026, 10, 24, 9)),
+          ('a', DateTime(2026, 10, 25, 9)),
+          ('c', DateTime(2026, 10, 25, 9)),
+          ('a', DateTime(2026, 10, 31, 9)),
+          ('b', DateTime(2026, 10, 31, 9)),
         ],
       );
       expect(reminders[2].kind, ReminderKind.snoozed);
@@ -461,7 +488,7 @@ void main() {
       final sub = subscriptionFixture(isTrial: true);
       expect(
         planner.plan(subscriptions: [sub], reminderMinutes: nineAm, now: now),
-        planFor(sub),
+        planAll(sub),
       );
     });
 
@@ -485,11 +512,171 @@ void main() {
         now: now,
       );
       expect(first, second);
-      expect(first, hasLength(80));
-      expect(first.map((r) => r.id).toSet(), hasLength(80));
+      expect(first, hasLength(160));
+      expect(first.map((r) => r.id).toSet(), hasLength(160));
       for (final r in first) {
         expect(r.id, inInclusiveRange(1, (1 << 31) - 1));
       }
+    });
+  });
+  group('second cycle', () {
+    test('plans the charge after the next one', () {
+      final sub = subscriptionFixture(name: 'Spotify');
+      final reminders = planAll(sub);
+      expect(times(reminders), [
+        DateTime(2026, 9, 24, 9),
+        DateTime(2026, 9, 30, 9),
+        DateTime(2026, 10, 25, 9),
+        DateTime(2026, 10, 31, 9),
+      ]);
+      expect(reminders[2].id, reminderId('sub-1', CalendarDate(2026, 10, 25)));
+      expect(reminders[2].title, 'Spotify renews on Sun, 1 Nov');
+      expect(reminders[3].title, 'Spotify renews tomorrow');
+      expect(reminders[3].body, 'Rs 299 on Sun, 1 Nov. Tap to see details.');
+      expect(reminders.every((r) => r.kind == ReminderKind.renewal), isTrue);
+    });
+
+    test('covers the next cycle when the first has no reminders left', () {
+      final sub = subscriptionFixture(
+        nextBillingDate: CalendarDate(2026, 9, 21),
+        reminderOffsets: [7, 1],
+      );
+      expect(times(planAll(sub)), [
+        DateTime(2026, 10, 14, 9),
+        DateTime(2026, 10, 20, 9),
+      ]);
+    });
+
+    test('follows the billing period and anchor day', () {
+      final weekly = subscriptionFixture(
+        period: BillingPeriod.weekly,
+        nextBillingDate: CalendarDate(2026, 9, 25),
+        reminderOffsets: [1],
+      );
+      expect(times(planAll(weekly)), [
+        DateTime(2026, 9, 24, 9),
+        DateTime(2026, 10, 1, 9),
+      ]);
+      final anchored = subscriptionFixture(
+        nextBillingDate: CalendarDate(2027, 2, 28),
+        anchorDay: 31,
+        reminderOffsets: [0],
+      );
+      expect(times(planAll(anchored, at: DateTime(2027, 2, 20))), [
+        DateTime(2027, 2, 28, 9),
+        DateTime(2027, 3, 31, 9),
+      ]);
+    });
+
+    test('keeps one reminder per day across cycles', () {
+      final sub = subscriptionFixture(
+        period: BillingPeriod.weekly,
+        nextBillingDate: CalendarDate(2026, 9, 28),
+        reminderOffsets: [7, 0],
+      );
+      final reminders = planAll(sub);
+      expect(times(reminders), [
+        DateTime(2026, 9, 28, 9),
+        DateTime(2026, 10, 5, 9),
+      ]);
+      expect(reminders.first.title, 'Spotify Premium renews today');
+      expect(reminders.map((r) => r.id).toSet(), hasLength(2));
+    });
+
+    test('trials stop at their first charge', () {
+      final sub = subscriptionFixture(isTrial: true);
+      final reminders = planAll(sub);
+      expect(times(reminders), [
+        DateTime(2026, 9, 24, 9),
+        DateTime(2026, 9, 30, 9),
+      ]);
+      expect(
+        reminders.every((r) => r.kind == ReminderKind.trialEnding),
+        isTrue,
+      );
+    });
+
+    test('snooze drops earlier reminders but keeps the next cycle', () {
+      final sub = subscriptionFixture().copyWith(
+        snoozedUntil: DateTime(2026, 9, 30, 15).toUtc(),
+      );
+      final reminders = planAll(sub);
+      expect(times(reminders), [
+        DateTime(2026, 9, 30, 15),
+        DateTime(2026, 10, 25, 9),
+        DateTime(2026, 10, 31, 9),
+      ]);
+      expect(reminders.map((r) => r.kind), [
+        ReminderKind.snoozed,
+        ReminderKind.renewal,
+        ReminderKind.renewal,
+      ]);
+    });
+
+    test('a custom period without days plans only the first cycle', () {
+      final sub = subscriptionFixture(period: BillingPeriod.customDays);
+      expect(times(planAll(sub)), [
+        DateTime(2026, 9, 24, 9),
+        DateTime(2026, 9, 30, 9),
+      ]);
+    });
+
+    test('the whole plan is capped well under the alarm limit', () {
+      final subs = [
+        for (var i = 0; i < 100; i++)
+          subscriptionFixture(
+            id: 'sub-$i',
+            nextBillingDate: CalendarDate(2026, 10, 1).addDays(i % 28),
+            reminderOffsets: const [7, 3, 1, 0],
+          ),
+      ];
+      final reminders = planner.plan(
+        subscriptions: subs,
+        reminderMinutes: nineAm,
+        now: now,
+      );
+      expect(reminders, hasLength(ReminderPlanner.maxReminders));
+      expect(ReminderPlanner.maxReminders, lessThan(500));
+      expect(reminders.map((r) => r.id).toSet(), hasLength(reminders.length));
+      final last = reminders.last.fireAt;
+      final all = [
+        for (final sub in subs) ...planAll(sub),
+      ];
+      expect(all.where((r) => r.fireAt.isBefore(last)).length, lessThan(300));
+    });
+
+    test('content is built only for reminders that survive the cap', () {
+      var built = 0;
+      final counting = ReminderPlanner(
+        content: (subscription, {required fireDay}) {
+          built++;
+          return ReminderContent.forSubscription(
+            subscription,
+            fireDay: fireDay,
+          );
+        },
+      );
+      final subs = [
+        for (var i = 0; i < 200; i++)
+          subscriptionFixture(
+            id: 'sub-$i',
+            nextBillingDate: CalendarDate(2026, 10, 1).addDays(i % 28),
+            reminderOffsets: const [7, 3, 1, 0],
+          ),
+      ];
+
+      final reminders = counting.plan(
+        subscriptions: subs,
+        reminderMinutes: nineAm,
+        now: now,
+      );
+
+      expect(reminders, hasLength(ReminderPlanner.maxReminders));
+      expect(built, lessThanOrEqualTo(ReminderPlanner.maxReminders));
+      expect(
+        reminders,
+        planner.plan(subscriptions: subs, reminderMinutes: nineAm, now: now),
+      );
     });
   });
 }

@@ -180,9 +180,10 @@ void main() {
 
       expect(h.settings.load().reminderMinutes, 21 * 60);
       expect(_value('Reminder time', '09:00 PM'), findsOneWidget);
-      expect(h.gateway.calls, contains('cancelAll'));
-      final scheduled = h.gateway.scheduledReminders.single;
-      expect(scheduled.fireAt.hour, 21);
+      expect(h.gateway.calls, containsAll(['canScheduleExact', 'schedule']));
+      final scheduled = h.gateway.scheduledReminders;
+      expect(scheduled, isNotEmpty);
+      expect(scheduled.every((r) => r.fireAt.hour == 21), isTrue);
     });
 
     testWidgets('name sheet saves a trimmed name and clears it', (

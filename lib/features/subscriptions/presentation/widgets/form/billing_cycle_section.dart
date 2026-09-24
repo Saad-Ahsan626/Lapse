@@ -1,25 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:lapse/core/theme/theme.dart';
 import 'package:lapse/core/widgets/widgets.dart';
 import 'package:lapse/features/subscriptions/domain/entities/billing_period.dart';
 import 'package:lapse/features/subscriptions/domain/validation/subscription_field.dart';
-import 'package:lapse/features/subscriptions/presentation/form/subscription_form_state.dart';
+import 'package:lapse/features/subscriptions/presentation/form/subscription_form_args.dart';
+import 'package:lapse/features/subscriptions/presentation/form/subscription_form_controller.dart';
 
-class BillingCycleSection extends StatelessWidget {
+class BillingCycleSection extends ConsumerWidget {
   const BillingCycleSection({
-    required this.state,
+    required this.args,
     required this.customDaysController,
-    required this.onPeriodChanged,
-    required this.onCustomDaysChanged,
     super.key,
   });
 
-  final SubscriptionFormState state;
+  final SubscriptionFormArgs args;
   final TextEditingController customDaysController;
-  final ValueChanged<BillingPeriod> onPeriodChanged;
-  final ValueChanged<String> onCustomDaysChanged;
 
   static String labelOf(BillingPeriod period) => switch (period) {
     BillingPeriod.weekly => 'Weekly',
@@ -30,9 +28,17 @@ class BillingCycleSection extends StatelessWidget {
   };
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final provider = subscriptionFormProvider(args);
+    final (:period, :error) = ref.watch(
+      provider.select(
+        (s) =>
+            (period: s.period, error: s.errors[SubscriptionField.customDays]),
+      ),
+    );
+    final notifier = ref.read(provider.notifier);
     final lapse = context.lapse;
-    final custom = state.period == BillingPeriod.customDays;
+    final custom = period == BillingPeriod.customDays;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -45,11 +51,11 @@ class BillingCycleSection extends StatelessWidget {
         Wrap(
           spacing: 9,
           children: [
-            for (final period in BillingPeriod.values)
+            for (final option in BillingPeriod.values)
               LapseChip(
-                label: labelOf(period),
-                selected: state.period == period,
-                onTap: () => onPeriodChanged(period),
+                label: labelOf(option),
+                selected: period == option,
+                onTap: () => notifier.setPeriod(option),
               ),
           ],
         ),
@@ -79,8 +85,8 @@ class BillingCycleSection extends StatelessWidget {
                         FilteringTextInputFormatter.digitsOnly,
                         LengthLimitingTextInputFormatter(4),
                       ],
-                      errorText: state.errors[SubscriptionField.customDays],
-                      onChanged: onCustomDaysChanged,
+                      errorText: error,
+                      onChanged: notifier.setCustomDays,
                     ),
                   ),
                 ),

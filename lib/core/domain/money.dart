@@ -25,11 +25,25 @@ class Money {
     'XPF',
   };
 
+  static const _threeDecimalCurrencies = {
+    'BHD',
+    'IQD',
+    'JOD',
+    'KWD',
+    'LYD',
+    'OMR',
+    'TND',
+  };
+
   final int minor;
   final String currency;
 
-  static int fractionDigits(String currency) =>
-      _zeroDecimalCurrencies.contains(currency.toUpperCase()) ? 0 : 2;
+  static int fractionDigits(String currency) {
+    final code = currency.toUpperCase();
+    if (_zeroDecimalCurrencies.contains(code)) return 0;
+    if (_threeDecimalCurrencies.contains(code)) return 3;
+    return 2;
+  }
 
   bool get isZero => minor == 0;
 

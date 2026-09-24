@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lapse/core/domain/calendar_date.dart';
 import 'package:lapse/core/domain/money.dart';
 import 'package:lapse/core/errors/validation_exception.dart';
+import 'package:lapse/features/subscriptions/domain/entities/billing_period.dart';
 import 'package:lapse/features/subscriptions/domain/entities/subscription.dart';
 import 'package:lapse/features/subscriptions/domain/entities/subscription_status.dart';
 import 'package:lapse/features/subscriptions/domain/services/billing_engine.dart';
@@ -214,6 +215,59 @@ void main() {
       ]);
       expect(
         repository.subscriptions['cancelled']!.nextBillingDate,
+        CalendarDate(2026, 8, 1),
+      );
+    });
+
+    RollOverDueSubscriptions rollOver() => RollOverDueSubscriptions(
+      repository: repository,
+      engine: engine,
+      clock: clock.call,
+      newId: ids.call,
+    );
+
+    test('two concurrent runs insert one set of charges', () async {
+      repository.seed([
+        subscriptionFixture(
+          nextBillingDate: CalendarDate(2026, 8, 10),
+          startDate: CalendarDate(2026, 7, 10),
+        ),
+      ]);
+      final useCase = rollOver();
+
+      final results = await Future.wait([useCase(), useCase()]);
+
+      expect(results, [1, 0]);
+      expect(repository.charges.map((c) => c.chargedOn), [
+        CalendarDate(2026, 8, 10),
+        CalendarDate(2026, 9, 10),
+      ]);
+    });
+
+    test('one bad subscription does not stop the others', () async {
+      repository.seed([
+        subscriptionFixture(
+          id: 'broken',
+          period: BillingPeriod.customDays,
+          nextBillingDate: CalendarDate(2026, 8, 1),
+          startDate: CalendarDate(2026, 7, 1),
+        ),
+        subscriptionFixture(
+          id: 'fine',
+          nextBillingDate: CalendarDate(2026, 8, 10),
+          startDate: CalendarDate(2026, 7, 10),
+        ),
+      ]);
+
+      final updated = await rollOver()();
+
+      expect(updated, 1);
+      expect(
+        repository.subscriptions['fine']!.nextBillingDate,
+        CalendarDate(2026, 10, 10),
+      );
+      expect(
+        repository.subscriptions['broken']!.nextBillingDate,
         CalendarDate(2026, 8, 1),
       );
     });

@@ -38,6 +38,7 @@ class _SubscriptionDetailScreenState
   bool _deleting = false;
   bool _left = false;
   bool _goneHandled = false;
+  bool _cancelling = false;
 
   void _back() {
     final navigator = Navigator.of(context);
@@ -137,8 +138,10 @@ class _SubscriptionDetailScreenState
 
     final detail = value.value;
     final Widget body;
+    Widget? actions;
     if (value.hasValue && detail != null) {
       body = _content(detail);
+      actions = _actions(detail.subscription);
     } else if (value.hasValue) {
       body = _gone();
     } else if (value.hasError) {
@@ -163,10 +166,35 @@ class _SubscriptionDetailScreenState
       );
     }
 
-    return Scaffold(
-      backgroundColor: c.background,
-      body: SafeArea(bottom: false, child: body),
+    return PopScope<Object?>(
+      canPop: Navigator.of(context).canPop(),
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _back();
+      },
+      child: Scaffold(
+        backgroundColor: c.background,
+        body: SafeArea(bottom: false, child: body),
+        bottomNavigationBar: actions,
+      ),
     );
+  }
+
+  Widget _actions(Subscription subscription) => DetailActionsBar(
+    isCancelled: subscription.isCancelled,
+    onCancelNow: () => unawaited(_cancelNow(subscription)),
+    onMarkCancelled: () => unawaited(_markCancelled(subscription)),
+    onRestore: () => unawaited(restoreWithFeedback(context, ref, subscription)),
+    onDelete: () => unawaited(_delete(subscription)),
+  );
+
+  Future<void> _markCancelled(Subscription subscription) async {
+    if (_cancelling) return;
+    _cancelling = true;
+    try {
+      await markCancelledWithCelebration(context, ref, subscription);
+    } finally {
+      _cancelling = false;
+    }
   }
 
   Widget _gone() {
@@ -207,16 +235,6 @@ class _SubscriptionDetailScreenState
               ),
             ],
           ),
-        ),
-        DetailActionsBar(
-          isCancelled: subscription.isCancelled,
-          onCancelNow: () => unawaited(_cancelNow(subscription)),
-          onMarkCancelled: () => unawaited(
-            markCancelledWithCelebration(context, ref, subscription),
-          ),
-          onRestore: () =>
-              unawaited(restoreWithFeedback(context, ref, subscription)),
-          onDelete: () => unawaited(_delete(subscription)),
         ),
       ],
     );

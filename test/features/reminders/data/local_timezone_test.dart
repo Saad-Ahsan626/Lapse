@@ -46,6 +46,20 @@ void main() {
     expect(tz.local.name, 'America/New_York');
   });
 
+  test('the bundled data resolves the zones the app relies on', () async {
+    for (final zone in const [
+      'Asia/Karachi',
+      'America/New_York',
+      'Europe/London',
+      'Asia/Kolkata',
+      'Australia/Sydney',
+    ]) {
+      respond(() => zone);
+      expect(await configureLocalTimezone(), zone);
+      expect(tz.local.name, zone);
+    }
+  });
+
   test('falls back to UTC when the platform call fails', () async {
     respond(() => throw PlatformException(code: 'boom'));
 

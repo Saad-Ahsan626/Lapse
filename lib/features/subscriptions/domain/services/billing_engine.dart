@@ -10,6 +10,7 @@ class BillingEngine {
   const BillingEngine();
 
   static const maxIterations = 1000;
+  static const maxRollOverPeriods = 100000;
   static const daysPerYear = 365;
 
   CalendarDate nextDate(
@@ -55,7 +56,7 @@ class BillingEngine {
     }
     var current = subscription;
     final charges = <Charge>[];
-    for (var i = 0; i < maxIterations; i++) {
+    for (var i = 0; i < maxRollOverPeriods; i++) {
       if (!current.nextBillingDate.isBefore(today)) break;
       charges.add(
         Charge(

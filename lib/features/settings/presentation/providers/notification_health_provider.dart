@@ -11,29 +11,30 @@ final batteryOptimizationIgnoredProvider = FutureProvider<bool>(
   (ref) => ref.watch(systemBridgeProvider).isIgnoringBatteryOptimizations(),
 );
 
-final notificationHealthProvider = FutureProvider<NotificationHealth>((
-  ref,
-) async {
-  final permission = ref.watch(notificationPermissionProvider.future);
-  final exact = ref.watch(exactAlarmsAllowedProvider.future);
-  final ignoring = ref.watch(batteryOptimizationIgnoredProvider.future);
-  final pending = ref.watch(pendingReminderIdsProvider.future);
-  final planned = ref.watch(plannedRemindersProvider).value ?? const [];
-  final subscriptions = ref.watch(subscriptionsProvider).value ?? const [];
+final FutureProvider<NotificationHealth> notificationHealthProvider =
+    FutureProvider.autoDispose<NotificationHealth>((
+      ref,
+    ) async {
+      final permission = ref.watch(notificationPermissionProvider.future);
+      final exact = ref.watch(exactAlarmsAllowedProvider.future);
+      final ignoring = ref.watch(batteryOptimizationIgnoredProvider.future);
+      final pending = ref.watch(pendingReminderIdsProvider.future);
+      final planned = ref.watch(plannedRemindersProvider).value ?? const [];
+      final subscriptions = ref.watch(subscriptionsProvider).value ?? const [];
 
-  final ids = await _or(pending, const <int>[]);
-  return NotificationHealth(
-    permission: await _or(permission, ReminderPermission.unknown),
-    exactAlarms: await _or(exact, false),
-    batteryOptimised: !await _or(ignoring, true),
-    pendingCount: ids.length,
-    next: nextPendingReminder(
-      planned: planned,
-      pendingIds: ids,
-      subscriptions: subscriptions,
-    ),
-  );
-});
+      final ids = await _or(pending, const <int>[]);
+      return NotificationHealth(
+        permission: await _or(permission, ReminderPermission.unknown),
+        exactAlarms: await _or(exact, false),
+        batteryOptimised: !await _or(ignoring, true),
+        pendingCount: ids.length,
+        next: nextPendingReminder(
+          planned: planned,
+          pendingIds: ids,
+          subscriptions: subscriptions,
+        ),
+      );
+    });
 
 NextReminder? nextPendingReminder({
   required List<PlannedReminder> planned,

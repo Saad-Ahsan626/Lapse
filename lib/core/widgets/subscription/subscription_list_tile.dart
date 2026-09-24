@@ -41,7 +41,8 @@ class SubscriptionListTile extends StatelessWidget {
   final String? semanticAmount;
   final String? semanticWhen;
 
-  static const chipWidthFactor = 0.42;
+  static const chipWidthFactor = 0.48;
+  static const largeTextChipWidthFactor = 0.42;
 
   static String semanticLabelFor({
     required String name,
@@ -114,7 +115,11 @@ class SubscriptionListTile extends StatelessWidget {
               const SizedBox(width: Space.sm),
               ConstrainedBox(
                 constraints: BoxConstraints(
-                  maxWidth: constraints.maxWidth * chipWidthFactor,
+                  maxWidth:
+                      constraints.maxWidth *
+                      (MediaQuery.textScalerOf(context).scale(1) > 1.2
+                          ? largeTextChipWidthFactor
+                          : chipWidthFactor),
                 ),
                 child: UrgencyChip(label: dueLabel, urgency: urgency),
               ),

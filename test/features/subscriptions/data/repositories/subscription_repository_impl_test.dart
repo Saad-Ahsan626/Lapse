@@ -117,6 +117,31 @@ void main() {
     expect(await repository.chargesFor('sub-1'), isEmpty);
   });
 
+  test('applyRollOver skips when the next date changed since read', () async {
+    await repository.upsert(subscriptionFixture());
+    final rolled = subscriptionFixture(
+      nextBillingDate: CalendarDate(2026, 11, 1),
+    );
+
+    final first = await repository.applyRollOver(
+      rolled,
+      [charge('c1')],
+      expectedNextBillingDate: CalendarDate(2026, 10, 1),
+    );
+    final second = await repository.applyRollOver(
+      rolled,
+      [charge('c2')],
+      expectedNextBillingDate: CalendarDate(2026, 10, 1),
+    );
+
+    expect(first, isTrue);
+    expect(second, isFalse);
+    expect(
+      (await repository.chargesFor('sub-1')).map((c) => c.id),
+      ['c1'],
+    );
+  });
+
   test('charges come back in date order', () async {
     await repository.applyRollOver(subscriptionFixture(), [
       charge('b', day: 20),

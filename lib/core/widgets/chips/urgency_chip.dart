@@ -21,20 +21,29 @@ class _UrgencyChipState extends State<UrgencyChip>
     with SingleTickerProviderStateMixin {
   late final AnimationController _pulse = AnimationController(
     vsync: this,
-    duration: Motion.urgentPulse,
+    duration: Motion.urgentPulse ~/ 10,
   );
+  Timer? _timer;
 
   bool get _shouldPulse =>
       widget.urgency == Urgency.urgent && !reduceMotion(context);
 
   void _syncPulse() {
     if (_shouldPulse) {
-      if (!_pulse.isAnimating) unawaited(_pulse.repeat());
+      _timer ??= Timer.periodic(Motion.urgentPulse, (_) {
+        unawaited(_pulse.forward(from: 0));
+      });
     } else {
-      _pulse
-        ..stop()
-        ..value = 0;
+      _stopPulse();
     }
+  }
+
+  void _stopPulse() {
+    _timer?.cancel();
+    _timer = null;
+    _pulse
+      ..stop()
+      ..value = 0;
   }
 
   @override
@@ -46,11 +55,15 @@ class _UrgencyChipState extends State<UrgencyChip>
   @override
   void didUpdateWidget(UrgencyChip oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.urgency != widget.urgency) _syncPulse();
+    if (oldWidget.urgency != widget.urgency) {
+      _stopPulse();
+      _syncPulse();
+    }
   }
 
   @override
   void dispose() {
+    _timer?.cancel();
     _pulse.dispose();
     super.dispose();
   }
@@ -97,16 +110,17 @@ class _UrgencyChipState extends State<UrgencyChip>
           animation: _pulse,
           child: chip,
           builder: (context, child) {
-            final t = _pulse.value;
-            if (t < 0.8 || t > 0.9) return child!;
-            final p = (t - 0.8) / 0.1;
+            final p = _pulse.value;
+            final active = _pulse.isAnimating;
             return DecoratedBox(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(Radii.chipSmall),
                 boxShadow: [
                   BoxShadow(
-                    color: ringColor.withValues(alpha: 0.45 * (1 - p)),
-                    spreadRadius: 7 * p,
+                    color: active
+                        ? ringColor.withValues(alpha: 0.45 * (1 - p))
+                        : ringColor.withValues(alpha: 0),
+                    spreadRadius: active ? 7 * p : 0,
                   ),
                 ],
               ),

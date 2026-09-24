@@ -1,32 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:lapse/core/domain/currency_info.dart';
 import 'package:lapse/core/theme/theme.dart';
 import 'package:lapse/core/widgets/widgets.dart';
 import 'package:lapse/features/subscriptions/domain/validation/subscription_field.dart';
-import 'package:lapse/features/subscriptions/presentation/form/subscription_form_state.dart';
+import 'package:lapse/features/subscriptions/presentation/form/subscription_form_args.dart';
+import 'package:lapse/features/subscriptions/presentation/form/subscription_form_controller.dart';
 
-class PriceSection extends StatelessWidget {
+class PriceSection extends ConsumerWidget {
   const PriceSection({
-    required this.state,
+    required this.args,
     required this.controller,
-    required this.onChanged,
     required this.onCurrencyTap,
     this.focusNode,
     super.key,
   });
 
-  final SubscriptionFormState state;
+  final SubscriptionFormArgs args;
   final TextEditingController controller;
-  final ValueChanged<String> onChanged;
   final VoidCallback onCurrencyTap;
   final FocusNode? focusNode;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final provider = subscriptionFormProvider(args);
+    final (:isTrial, :currency, :error) = ref.watch(
+      provider.select(
+        (s) => (
+          isTrial: s.isTrial,
+          currency: s.currency,
+          error: s.errors[SubscriptionField.price],
+        ),
+      ),
+    );
+    if (isTrial) return const SizedBox.shrink();
     final lapse = context.lapse;
-    final info = currencyInfo(state.currency);
+    final info = currencyInfo(currency);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -52,10 +63,11 @@ class PriceSection extends StatelessWidget {
               FilteringTextInputFormatter.allow(RegExp('[0-9.,]')),
             ],
             textInputAction: TextInputAction.done,
-            errorText: state.errors[SubscriptionField.price],
-            onChanged: onChanged,
+            errorText: error,
+            onChanged: ref.read(provider.notifier).setPrice,
           ),
         ),
+        const SizedBox(height: Space.xl),
       ],
     );
   }

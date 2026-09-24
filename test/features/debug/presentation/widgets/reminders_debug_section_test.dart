@@ -120,15 +120,16 @@ void main() {
   testWidgets('Sync now re-schedules and reports the count', (tester) async {
     final gateway = FakeNotificationGateway();
     await _pump(tester, gateway: gateway);
-    final before = gateway.cancelAllCount;
+    int syncs() => gateway.calls.where((c) => c == 'canScheduleExact').length;
+    final before = syncs();
 
     await tester.tap(find.text('Sync now'));
     await _settle(tester);
 
-    expect(gateway.cancelAllCount, before + 1);
-    expect(gateway.scheduled, hasLength(2));
-    expect(find.text('Scheduled 2 reminder(s)'), findsOneWidget);
-    expect(_row(tester, 'Pending'), '2');
+    expect(syncs(), before + 1);
+    expect(gateway.scheduled, hasLength(4));
+    expect(find.text('Scheduled 4 reminder(s)'), findsOneWidget);
+    expect(_row(tester, 'Pending'), '4');
   });
 
   testWidgets('Fire test schedules a reminder 10 s ahead', (tester) async {

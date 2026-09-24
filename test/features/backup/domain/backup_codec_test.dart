@@ -219,6 +219,46 @@ void main() {
       );
     });
 
+    test('rejects custom days outside 1 to 9999', () {
+      const gym = '“Gym” in this backup is invalid.';
+      expect(_message(withSubscription(1, (s) => s['customDays'] = 0)), gym);
+      expect(
+        _message(withSubscription(1, (s) => s['customDays'] = 10000)),
+        gym,
+      );
+      expect(
+        _message(withSubscription(1, (s) => s['customDays'] = 1 << 40)),
+        gym,
+      );
+      final edge = withSubscription(1, (s) => s['customDays'] = 9999);
+      expect(
+        BackupCodec.decode(jsonEncode(edge)).subscriptions[1].customDays,
+        9999,
+      );
+    });
+
+    test('rejects years after 9999', () {
+      const netflix = '“Netflix Standard” in this backup is invalid.';
+      expect(
+        _message(
+          withSubscription(0, (s) => s['createdAt'] = '+10000-01-01T00:00:00Z'),
+        ),
+        netflix,
+      );
+      expect(
+        _message(
+          withSubscription(0, (s) => s['snoozedUntil'] = '+12026-01-01T00:00Z'),
+        ),
+        netflix,
+      );
+      expect(
+        _message(
+          withSubscription(0, (s) => s['nextBillingDate'] = '+10000-01-01'),
+        ),
+        netflix,
+      );
+    });
+
     test('uses the position when the name is missing', () {
       expect(
         _message(withSubscription(4, (s) => s.remove('name'))),

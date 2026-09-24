@@ -1,10 +1,11 @@
 const databaseFileName = 'lapse.db';
 
-const schemaVersion = 1;
+const schemaVersion = 2;
 
 abstract final class Tables {
   static const subscriptions = 'subscriptions';
   static const charges = 'charges';
+  static const reminderPlan = 'reminder_plan';
 }
 
 const schemaV1 = [
@@ -50,5 +51,18 @@ const schemaV1 = [
   '''
   CREATE INDEX idx_charges_subscription
     ON charges(subscription_id, charged_on)
+  ''',
+];
+
+const schemaV2 = [
+  '''
+  CREATE INDEX IF NOT EXISTS idx_charges_charged_on
+    ON charges(charged_on)
+  ''',
+  '''
+  CREATE TABLE IF NOT EXISTS reminder_plan (
+    id INTEGER PRIMARY KEY,
+    signature TEXT NOT NULL
+  )
   ''',
 ];

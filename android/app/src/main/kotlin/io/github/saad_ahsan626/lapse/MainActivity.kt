@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
+import android.provider.DocumentsContract
 import android.provider.Settings
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -67,7 +68,11 @@ class MainActivity : FlutterActivity() {
             appDetailsIntent()
         }
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        startActivity(intent)
+        try {
+            startActivity(intent)
+        } catch (e: ActivityNotFoundException) {
+            startActivity(appDetailsIntent().addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        }
     }
 
     private fun appVersion(): Map<String, String> {
@@ -179,7 +184,11 @@ class MainActivity : FlutterActivity() {
             super.onActivityResult(requestCode, resultCode, data)
             return
         }
-        val result = pendingResult ?: return
+        val result = pendingResult
+        if (result == null) {
+            discardOrphan(requestCode, resultCode, data?.data)
+            return
+        }
         val bytes = pendingBytes
         pendingResult = null
         pendingBytes = null
@@ -203,7 +212,7 @@ class MainActivity : FlutterActivity() {
     private fun writeDocument(uri: Uri, bytes: ByteArray, result: MethodChannel.Result) {
         io.execute {
             try {
-                val stream = contentResolver.openOutputStream(uri, "wt")
+                val stream = openForWriting(uri)
                     ?: throw java.io.IOException("Could not open $uri")
                 stream.use { it.write(bytes) }
                 mainHandler.post { result.success(true) }
@@ -218,10 +227,44 @@ class MainActivity : FlutterActivity() {
             try {
                 val stream = contentResolver.openInputStream(uri)
                     ?: throw java.io.IOException("Could not open $uri")
-                val bytes = stream.use { it.readBytes() }
-                mainHandler.post { result.success(bytes) }
+                val bytes = stream.use { readLimited(it) }
+                if (bytes == null) {
+                    mainHandler.post { result.error("too_large", "File is too large", null) }
+                } else {
+                    mainHandler.post { result.success(bytes) }
+                }
             } catch (e: Exception) {
                 mainHandler.post { result.error("read_failed", e.message, null) }
+            }
+        }
+    }
+
+    private fun openForWriting(uri: Uri): java.io.OutputStream? =
+        try {
+            contentResolver.openOutputStream(uri, "wt")
+        } catch (e: IllegalArgumentException) {
+            contentResolver.openOutputStream(uri, "w")
+        } catch (e: java.io.FileNotFoundException) {
+            contentResolver.openOutputStream(uri, "w")
+        }
+
+    private fun readLimited(stream: java.io.InputStream): ByteArray? {
+        val out = java.io.ByteArrayOutputStream()
+        val buffer = ByteArray(8192)
+        while (true) {
+            val read = stream.read(buffer)
+            if (read < 0) return out.toByteArray()
+            if (out.size() + read > MAX_DOCUMENT_BYTES) return null
+            out.write(buffer, 0, read)
+        }
+    }
+
+    private fun discardOrphan(requestCode: Int, resultCode: Int, uri: Uri?) {
+        if (requestCode != REQUEST_SAVE || resultCode != Activity.RESULT_OK || uri == null) return
+        io.execute {
+            try {
+                DocumentsContract.deleteDocument(contentResolver, uri)
+            } catch (e: Exception) {
             }
         }
     }
@@ -230,5 +273,6 @@ class MainActivity : FlutterActivity() {
         private const val CHANNEL = "lapse/system"
         private const val REQUEST_SAVE = 7301
         private const val REQUEST_OPEN = 7302
+        private const val MAX_DOCUMENT_BYTES = 10 * 1024 * 1024
     }
 }

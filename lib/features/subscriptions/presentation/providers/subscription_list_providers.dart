@@ -40,7 +40,12 @@ final StreamProviderFamily<Subscription?, String> subscriptionByIdProvider =
 final FutureProviderFamily<List<Charge>, String> chargesProvider =
     FutureProvider.autoDispose.family<List<Charge>, String>(
       (ref, subscriptionId) {
-        ref.watch(subscriptionsProvider);
+        ref.watch(
+          subscriptionsProvider.select(
+            (all) =>
+                all.value?.where((s) => s.id == subscriptionId).firstOrNull,
+          ),
+        );
         return ref
             .watch(subscriptionRepositoryProvider)
             .chargesFor(subscriptionId);

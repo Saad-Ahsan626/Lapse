@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lapse/core/domain/calendar_date.dart';
 import 'package:lapse/core/providers/clock_providers.dart';
 import 'package:lapse/features/settings/presentation/providers/settings_providers.dart';
-import 'package:lapse/features/subscriptions/domain/entities/charge.dart';
 import 'package:lapse/features/subscriptions/domain/entities/subscription.dart';
 import 'package:lapse/features/subscriptions/domain/services/spending_calculator.dart';
 import 'package:lapse/features/subscriptions/domain/services/spending_summary.dart';
@@ -26,14 +25,6 @@ int _bySoonest(Subscription a, Subscription b) {
   if (byDate != 0) return byDate;
   return a.name.toLowerCase().compareTo(b.name.toLowerCase());
 }
-
-final chargesThisMonthProvider = FutureProvider<List<Charge>>((ref) {
-  ref.watch(subscriptionsProvider);
-  final today = ref.watch(todayProvider);
-  return ref
-      .watch(subscriptionRepositoryProvider)
-      .chargesBetween(_monthStart(today), _monthEnd(today));
-});
 
 final _spendingSummarySnapshotProvider = FutureProvider<SpendingSummary>((
   ref,

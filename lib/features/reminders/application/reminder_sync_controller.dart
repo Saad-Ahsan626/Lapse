@@ -6,6 +6,7 @@ import 'package:lapse/features/reminders/application/reminder_providers.dart';
 import 'package:lapse/features/reminders/application/reminder_sync.dart';
 import 'package:lapse/features/reminders/application/reminder_sync_result.dart';
 import 'package:lapse/features/reminders/data/reminder_permission.dart';
+import 'package:lapse/features/reminders/data/reminder_plan_store_provider.dart';
 import 'package:lapse/features/settings/presentation/providers/settings_providers.dart';
 import 'package:lapse/features/subscriptions/presentation/providers/subscription_list_providers.dart';
 
@@ -54,21 +55,26 @@ class ReminderSyncController extends Notifier<ReminderSyncResult?> {
     _timer = null;
   }
 
+  ReminderSync _createSync() => ReminderSync(
+    gateway: ref.read(notificationGatewayProvider),
+    planner: ref.read(reminderPlannerProvider),
+    planStore: ref.read(reminderPlanStoreProvider),
+    clock: ref.read(clockProvider),
+  );
+
   Future<ReminderSyncResult?> _perform() async {
     try {
       if (!ref.mounted) return null;
       final permission = await ref.read(notificationPermissionProvider.future);
-      if (!ref.mounted || permission != ReminderPermission.granted) {
+      if (!ref.mounted) return null;
+      if (permission != ReminderPermission.granted) {
+        await _createSync().forgetPlan();
         return null;
       }
       final subscriptions = await ref.read(subscriptionsProvider.future);
       if (!ref.mounted) return null;
       final clock = ref.read(clockProvider);
-      final sync = ReminderSync(
-        gateway: ref.read(notificationGatewayProvider),
-        planner: ref.read(reminderPlannerProvider),
-        clock: clock,
-      );
+      final sync = _createSync();
       final result = await sync.sync(
         subscriptions: subscriptions,
         reminderMinutes: ref.read(settingsProvider).reminderMinutes,

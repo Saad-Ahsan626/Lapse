@@ -25,11 +25,10 @@ class ServiceTile extends StatelessWidget {
 
   final Object? heroTag;
 
+  static final RegExp _wordBreak = RegExp('[^A-Za-z0-9]+');
+
   static String initialsFor(String name) {
-    final words = name
-        .split(RegExp('[^A-Za-z0-9]+'))
-        .where((w) => w.isNotEmpty)
-        .toList();
+    final words = name.split(_wordBreak).where((w) => w.isNotEmpty).toList();
     if (words.isEmpty) return '?';
     if (words.length == 1) {
       final w = words.first;

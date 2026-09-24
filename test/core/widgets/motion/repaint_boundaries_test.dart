@@ -55,28 +55,37 @@ void main() {
       );
       for (final box in boxes) {
         final decoration = box.decoration;
-        if (decoration is BoxDecoration &&
-            (decoration.boxShadow?.isNotEmpty ?? false)) {
-          return decoration.boxShadow!.first.spreadRadius;
+        final shadows = decoration is BoxDecoration
+            ? decoration.boxShadow
+            : null;
+        if (shadows != null &&
+            shadows.isNotEmpty &&
+            shadows.first.color.a > 0) {
+          return shadows.first.spreadRadius;
         }
       }
       return null;
     }
 
-    testWidgets('grows outward to 7px once every 3s', (tester) async {
+    testWidgets('grows outward to 7px over 300ms once every 3s', (
+      tester,
+    ) async {
       await tester.pumpLapse(
         const UrgencyChip(label: 'Tomorrow', urgency: Urgency.urgent),
       );
 
-      await tester.pump(const Duration(milliseconds: 2000));
+      await tester.pump(const Duration(milliseconds: 2900));
       expect(spread(tester), isNull);
-      await tester.pump(const Duration(milliseconds: 550));
+      expect(tester.binding.hasScheduledFrame, isFalse);
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump(const Duration(milliseconds: 150));
       expect(spread(tester), inExclusiveRange(0, 7));
-      await tester.pump(const Duration(milliseconds: 140));
+      await tester.pump(const Duration(milliseconds: 130));
       expect(spread(tester), closeTo(7, 0.5));
       await tester.pump(const Duration(milliseconds: 100));
       expect(spread(tester), isNull);
-      await tester.pump(const Duration(milliseconds: 2760));
+      await tester.pump(const Duration(milliseconds: 2620));
+      await tester.pump(const Duration(milliseconds: 150));
       expect(spread(tester), inExclusiveRange(0, 7));
     });
 
@@ -86,14 +95,14 @@ void main() {
       await tester.pumpLapse(
         const UrgencyChip(label: 'In 5 days', urgency: Urgency.warning),
       );
-      await tester.pump(const Duration(milliseconds: 2600));
+      await tester.pump(const Duration(milliseconds: 3200));
       expect(spread(tester), isNull);
 
       await tester.pumpLapse(
         const UrgencyChip(label: 'Tomorrow', urgency: Urgency.urgent),
         reduceMotion: true,
       );
-      await tester.pump(const Duration(milliseconds: 2600));
+      await tester.pump(const Duration(milliseconds: 3200));
       expect(spread(tester), isNull);
     });
   });

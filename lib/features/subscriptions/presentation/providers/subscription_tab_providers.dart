@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
+import 'package:lapse/features/settings/presentation/providers/settings_providers.dart';
 import 'package:lapse/features/subscriptions/domain/entities/subscription.dart';
 import 'package:lapse/features/subscriptions/domain/services/billing_engine.dart';
 import 'package:lapse/features/subscriptions/presentation/providers/subscription_list_providers.dart';
@@ -49,9 +50,12 @@ subscriptionTabProvider =
     ) {
       final sort = ref.watch(subscriptionSortProvider);
       final engine = ref.watch(billingEngineProvider);
+      final currency = ref.watch(
+        settingsProvider.select((settings) => settings.defaultCurrency),
+      );
       return ref.watch(subscriptionsProvider).whenData((all) {
         final items = all.where((s) => _belongsTo(s, tab)).toList()
-          ..sort(_comparator(sort, tab, engine));
+          ..sort(_comparator(sort, tab, engine, currency));
         return List<Subscription>.unmodifiable(items);
       });
     });
@@ -66,6 +70,7 @@ Comparator<Subscription> _comparator(
   SubscriptionSort sort,
   SubscriptionTab tab,
   BillingEngine engine,
+  String defaultCurrency,
 ) => switch (sort) {
   SubscriptionSort.nextCharge when tab == SubscriptionTab.cancelled =>
     (a, b) => _thenName(_cancelledAt(b).compareTo(_cancelledAt(a)), a, b),
@@ -74,13 +79,28 @@ Comparator<Subscription> _comparator(
     a,
     b,
   ),
-  SubscriptionSort.price => (a, b) => _thenName(
-    engine.yearlyCost(b).minor.compareTo(engine.yearlyCost(a).minor),
-    a,
-    b,
-  ),
+  SubscriptionSort.price => (a, b) {
+    final byCurrency = _compareCurrency(
+      a.price.currency,
+      b.price.currency,
+      defaultCurrency,
+    );
+    if (byCurrency != 0) return byCurrency;
+    return _thenName(
+      engine.yearlyCost(b).minor.compareTo(engine.yearlyCost(a).minor),
+      a,
+      b,
+    );
+  },
   SubscriptionSort.name => (a, b) => _thenName(0, a, b),
 };
+
+int _compareCurrency(String a, String b, String defaultCurrency) {
+  if (a == b) return 0;
+  if (a == defaultCurrency) return -1;
+  if (b == defaultCurrency) return 1;
+  return a.compareTo(b);
+}
 
 DateTime _cancelledAt(Subscription s) => s.cancelledAt ?? s.updatedAt;
 

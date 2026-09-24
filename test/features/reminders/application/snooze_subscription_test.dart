@@ -56,11 +56,15 @@ void main() {
       gateway.cancelled,
       contains(reminderId('sub-1', CalendarDate(2026, 9, 19))),
     );
-    final scheduled = gateway.scheduledReminders;
-    expect(scheduled, hasLength(1));
-    expect(scheduled.single.kind, ReminderKind.snoozed);
-    expect(scheduled.single.fireAt, DateTime(2026, 9, 20, 8));
-    expect(gateway.scheduled.values.single.$2, isFalse);
+    final scheduled = gateway.scheduledReminders.toList()
+      ..sort((a, b) => a.fireAt.compareTo(b.fireAt));
+    expect(scheduled.map((r) => r.fireAt), [
+      DateTime(2026, 9, 20, 8),
+      DateTime(2026, 10, 19, 9),
+      DateTime(2026, 10, 20, 9),
+    ]);
+    expect(scheduled.first.kind, ReminderKind.snoozed);
+    expect(gateway.scheduled.values.every((entry) => !entry.$2), isTrue);
   });
 
   test('keeps later reminders of the same subscription', () async {
@@ -71,7 +75,7 @@ void main() {
     await snooze(DateTime(2026, 9, 19, 10), notificationId: 7);
 
     final kinds = gateway.scheduledReminders.map((r) => r.kind).toList();
-    expect(kinds, hasLength(3));
+    expect(kinds, hasLength(5));
     expect(kinds.where((k) => k == ReminderKind.snoozed), hasLength(1));
   });
 

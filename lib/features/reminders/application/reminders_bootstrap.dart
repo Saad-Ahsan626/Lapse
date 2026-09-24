@@ -6,10 +6,11 @@ import 'package:lapse/features/reminders/application/reminder_providers.dart';
 import 'package:lapse/features/reminders/data/notification_launch.dart';
 
 Future<NotificationLaunch?> bootstrapReminders(
-  ProviderContainer container,
-) async {
+  ProviderContainer container, {
+  bool configureTimezone = true,
+}) async {
   try {
-    await container.read(configureTimezoneProvider)();
+    if (configureTimezone) await container.read(configureTimezoneProvider)();
     final gateway = container.read(notificationGatewayProvider);
     await gateway.initialize(
       onTap: (tap) => unawaited(

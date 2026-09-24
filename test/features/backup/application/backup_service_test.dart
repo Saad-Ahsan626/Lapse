@@ -13,6 +13,7 @@ import 'package:lapse/features/backup/domain/import_mode.dart';
 import 'package:lapse/features/backup/domain/import_result.dart';
 import 'package:lapse/features/settings/domain/entities/app_theme_mode.dart';
 import 'package:lapse/features/settings/presentation/providers/settings_providers.dart';
+import 'package:lapse/features/subscriptions/domain/entities/charge.dart';
 
 import '../../../helpers/fake_subscription_repository.dart';
 import '../../../helpers/fake_system_bridge.dart';
@@ -20,6 +21,23 @@ import '../../../helpers/in_memory_settings_repository.dart';
 import '../../../helpers/subscription_fixtures.dart';
 import '../backup_harness.dart';
 import '../backup_test_data.dart';
+
+class _CountingRepository extends FakeSubscriptionRepository {
+  int allChargesCalls = 0;
+  int chargesForCalls = 0;
+
+  @override
+  Future<List<Charge>> allCharges() {
+    allChargesCalls++;
+    return super.allCharges();
+  }
+
+  @override
+  Future<List<Charge>> chargesFor(String subscriptionId) {
+    chargesForCalls++;
+    return super.chargesFor(subscriptionId);
+  }
+}
 
 void main() {
   late FakeSubscriptionRepository repository;
@@ -67,6 +85,26 @@ void main() {
         decoded.settings,
         BackupSettings.of(startingSettings()),
       );
+    });
+
+    test('reads all charges in one query', () async {
+      final counting = _CountingRepository();
+      final backup = fullBackup();
+      counting
+        ..seed(backup.subscriptions)
+        ..charges.addAll(backup.charges);
+      final scoped = backupContainer(
+        repository: counting,
+        bridge: bridge,
+        settings: settings,
+      );
+      addTearDown(scoped.dispose);
+
+      final data = await scoped.read(backupServiceProvider).snapshot();
+
+      expect(counting.allChargesCalls, 1);
+      expect(counting.chargesForCalls, 0);
+      expect(data.charges, await counting.allCharges());
     });
 
     test('returns false and records nothing when cancelled', () async {
@@ -215,6 +253,36 @@ void main() {
       final rolled = await repository.getById('overdue');
       expect(rolled!.nextBillingDate, CalendarDate(2026, 10, 1));
       expect(repository.charges, hasLength(1));
+    });
+
+    test('a failing roll-over still reports the import', () async {
+      final restored = settingsFixture();
+      final backup = BackupData(
+        exportedAt: backupExportedAt,
+        settings: restored,
+        subscriptions: [subscriptionFixture(id: 'kept')],
+        charges: const [],
+      );
+      var rollOvers = 0;
+      final failing = BackupService(
+        repository: repository,
+        bridge: bridge,
+        clock: () => DateTime(2026, 9, 19, 10),
+        readSettings: () => container.read(settingsProvider),
+        updateSettings: (change) =>
+            container.read(settingsProvider.notifier).update(change),
+        rollOver: () {
+          rollOvers++;
+          return Future<int>.error(StateError('disk full'));
+        },
+      );
+
+      final result = await failing.apply(backup, ImportMode.replace);
+
+      expect(rollOvers, 1);
+      expect(result.subscriptions, 1);
+      expect((await repository.getAll()).map((s) => s.id), ['kept']);
+      expect(container.read(settingsProvider).themeMode, restored.themeMode);
     });
   });
 }

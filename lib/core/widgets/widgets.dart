@@ -15,6 +15,7 @@ export 'inputs/lapse_select_field.dart';
 export 'inputs/lapse_switch_row.dart';
 export 'inputs/lapse_text_field.dart';
 export 'layout/empty_state.dart';
+export 'layout/keyboard_inset.dart';
 export 'layout/lapse_bottom_sheet.dart';
 export 'layout/lapse_card.dart';
 export 'layout/lapse_row_group.dart';

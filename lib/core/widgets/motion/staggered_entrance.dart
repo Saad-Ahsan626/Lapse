@@ -47,9 +47,13 @@ class _StaggeredEntranceState extends State<StaggeredEntrance>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_started) return;
+    final reduce = reduceMotion(context);
+    if (_started) {
+      if (reduce) _controller.value = 1;
+      return;
+    }
     _started = true;
-    if (!widget.animate || reduceMotion(context)) {
+    if (!widget.animate || reduce) {
       _controller.value = 1;
     } else {
       unawaited(_controller.forward());
@@ -64,20 +68,17 @@ class _StaggeredEntranceState extends State<StaggeredEntrance>
 
   @override
   Widget build(BuildContext context) {
-    final instant = reduceMotion(context);
-    return AnimatedBuilder(
-      animation: _curve,
-      child: widget.child,
-      builder: (context, child) {
-        final t = instant ? 1.0 : _curve.value.clamp(0.0, 1.0);
-        return Opacity(
-          opacity: t,
-          child: Transform.translate(
-            offset: Offset(0, StaggeredEntrance.offset * (1 - t)),
-            child: child,
-          ),
-        );
-      },
+    return FadeTransition(
+      opacity: _curve,
+      child: MatrixTransition(
+        animation: _curve,
+        onTransform: (t) => Matrix4.translationValues(
+          0,
+          StaggeredEntrance.offset * (1 - t),
+          0,
+        ),
+        child: widget.child,
+      ),
     );
   }
 }

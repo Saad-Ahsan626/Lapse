@@ -146,7 +146,7 @@ lib/
 └── features/
     ├── catalog/                    # service catalog: entity, ranked search, JSON loader,
     │                               # providers, picker sheet (screen 06)
-    ├── splash/                     # animated logo splash (01): pure timeline + screen
+    ├── splash/                     # animated splash (01): pure timeline, one CustomPainter
     ├── onboarding/                 # slides (02) with Flutter illustrations, setup (04),
     │                               # onboarding controller
     ├── home/                       # Home screen (05): totals, trials, upcoming, empty state
@@ -283,7 +283,8 @@ The launcher icon and the system splash are hand-written Android resources (no
 `flutter_launcher_icons` / `flutter_native_splash`): an adaptive icon with a vector
 foreground and a monochrome layer for Android 13 themed icons, legacy PNGs for Android
 7.x, and the Android 12+ splash showing the same mark the Flutter splash animates. The
-animated splash plays in full on first launch, a 0.5 s version afterwards, a 200 ms fade
+animated splash (a single `CustomPainter` driven straight by its animation: no widget
+rebuilds, cached gradients and pre-rasterised text) plays in full on first launch, a 0.5 s version afterwards, a 200 ms fade
 with reduce motion, and is skipped when a notification opens the app.
 
 ## Motion & accessibility

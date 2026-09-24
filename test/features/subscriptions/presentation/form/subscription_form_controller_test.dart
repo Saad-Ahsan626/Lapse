@@ -268,6 +268,36 @@ void main() {
       expect(form.state.trialLengthDays, 14);
     });
 
+    test('editing a trial measures its length from the start date', () async {
+      repository.seed([
+        subscriptionFixture(
+          startDate: CalendarDate(2026, 9, 13),
+          nextBillingDate: CalendarDate(2026, 9, 20),
+          isTrial: true,
+        ),
+      ]);
+      final form = await openForm(
+        formContainer(repository),
+        const SubscriptionFormArgs.edit('sub-1'),
+      );
+      expect(form.state.trialLengthDays, 7);
+
+      form.setTrialLength(7);
+      expect(form.state.nextBillingDate, CalendarDate(2026, 9, 20));
+      expect(form.isDirty, isFalse);
+
+      form.setTrialLength(30);
+      expect(form.state.nextBillingDate, CalendarDate(2026, 10, 13));
+
+      form.setNextBillingDate(CalendarDate(2026, 9, 27));
+      expect(form.state.trialLengthDays, 14);
+
+      form
+        ..setTrial(on: false)
+        ..setTrial(on: true);
+      expect(form.state.nextBillingDate, CalendarDate(2026, 9, 27));
+    });
+
     test('edit mode never changes the start date', () async {
       repository.seed([subscriptionFixture()]);
       final form = await openForm(

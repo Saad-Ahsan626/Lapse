@@ -5,6 +5,7 @@ import 'package:lapse/core/domain/money.dart';
 final _grouping = NumberFormat.decimalPattern('en');
 final _inputPattern = RegExp(r'^(\d*)(?:\.(\d*))?$');
 final _letterEnd = RegExp(r'[A-Za-z]$');
+final _whitespace = RegExp(r'\s');
 
 String formatMoney(Money money, {bool showCode = false}) {
   final symbol = currencyInfo(money.currency).symbol;
@@ -21,12 +22,12 @@ String moneyInputText(Money money) {
 }
 
 Money? parseMoneyInput(String text, String currency) {
-  final cleaned = text.trim().replaceAll(RegExp(r'[\s,]'), '');
+  final digits = Money.fractionDigits(currency);
+  final cleaned = _normalizeSeparators(text, digits);
   final match = _inputPattern.firstMatch(cleaned);
   if (match == null) return null;
   final whole = match.group(1)!;
   final fraction = match.group(2);
-  final digits = Money.fractionDigits(currency);
   if (whole.isEmpty && (fraction == null || fraction.isEmpty)) return null;
   if (fraction != null && (digits == 0 || fraction.length > digits)) {
     return null;
@@ -36,6 +37,24 @@ Money? parseMoneyInput(String text, String currency) {
   final padded = (fraction ?? '').padRight(digits, '0');
   final fractionValue = padded.isEmpty ? 0 : int.parse(padded);
   return Money(wholeValue * _scale(digits) + fractionValue, currency);
+}
+
+String _normalizeSeparators(String text, int digits) {
+  final compact = text.replaceAll(_whitespace, '');
+  final lastComma = compact.lastIndexOf(',');
+  if (lastComma < 0) return compact;
+  final singleComma = compact.indexOf(',') == lastComma;
+  final lastDot = compact.lastIndexOf('.');
+  if (lastDot > lastComma || !singleComma) {
+    return compact.replaceAll(',', '');
+  }
+  final before = compact.substring(0, lastComma);
+  final after = compact.substring(lastComma + 1);
+  if (lastDot >= 0) return '${before.replaceAll('.', '')}.$after';
+  if (after.isNotEmpty && after.length <= digits && after.length != 3) {
+    return '$before.$after';
+  }
+  return '$before$after';
 }
 
 String _amountText(Money money, {required bool grouped}) {

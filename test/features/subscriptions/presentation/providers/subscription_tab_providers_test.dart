@@ -111,6 +111,41 @@ void main() {
     expect(await ids(SubscriptionTab.cancelled), ['x2', 'x1']);
   });
 
+  test('price sort groups by currency, default currency first', () async {
+    harness.repository.subscriptions.clear();
+    harness.repository.seed([
+      subscriptionFixture(
+        id: 'usd-big',
+        name: 'Adobe',
+        priceMinor: 5999,
+        currency: 'USD',
+      ),
+      subscriptionFixture(
+        id: 'usd-small',
+        name: 'Notion',
+        priceMinor: 999,
+        currency: 'USD',
+      ),
+      subscriptionFixture(
+        id: 'eur',
+        name: 'Bolt',
+        priceMinor: 999999,
+        currency: 'EUR',
+      ),
+      subscriptionFixture(id: 'pkr-small', name: 'Tapmad', priceMinor: 30000),
+      subscriptionFixture(id: 'pkr-big', name: 'Netflix', priceMinor: 110000),
+    ]);
+    sortBy(SubscriptionSort.price);
+
+    expect(await ids(SubscriptionTab.active), [
+      'pkr-big',
+      'pkr-small',
+      'eur',
+      'usd-big',
+      'usd-small',
+    ]);
+  });
+
   test('name sort is case-insensitive A–Z', () async {
     sortBy(SubscriptionSort.name);
 

@@ -3,12 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lapse/core/theme/app_theme.dart';
+import 'package:lapse/core/widgets/widgets.dart';
 import 'package:lapse/features/onboarding/presentation/screens/onboarding_screen.dart';
+import 'package:lapse/features/onboarding/presentation/widgets/parallax_slide.dart';
 import 'package:lapse/features/onboarding/presentation/widgets/worm_indicator.dart';
 import 'package:lapse/features/settings/presentation/providers/settings_providers.dart';
 
 import '../../helpers/in_memory_settings_repository.dart';
 import '../../helpers/pump_app.dart';
+import '../../helpers/rebuild_counter.dart';
 
 const _titles = [
   'Free trials quietly turn into charges',
@@ -192,6 +195,29 @@ void main() {
     await _settle(tester);
     expect(_location(router), '/onboarding/setup');
     expect(find.text('Setup stub'), findsOneWidget);
+  });
+
+  testWidgets('a drag rebuilds no slide and no button', (tester) async {
+    _phone(tester);
+    await _pumpRouted(tester);
+
+    final counter = RebuildCounter()..start();
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byType(PageView)),
+    );
+    for (var i = 0; i < 10; i++) {
+      await gesture.moveBy(const Offset(-12, 0));
+      await tester.pump();
+    }
+    final page = tester.widget<WormIndicator>(find.byType(WormIndicator)).page;
+    await gesture.up();
+    await _settle(tester);
+
+    expect(page, greaterThan(0));
+    expect(counter.of(ParallaxSlide), lessThanOrEqualTo(1));
+    expect(counter.of(LapseButton), 0);
+    expect(counter.of(OnboardingScreen), 0);
+    expect(counter.of(WormIndicator), greaterThanOrEqualTo(10));
   });
 
   testWidgets('swiping moves between slides', (tester) async {

@@ -219,12 +219,12 @@ void main() {
       expect(result.subscription.nextBillingDate, d(2026, 1, 1));
     });
 
-    test('stops after the safety cap', () {
+    test('a daily subscription from 2022 catches up in one run', () {
       final sub = subscriptionFixture(
         period: BillingPeriod.customDays,
         customDays: 1,
-        startDate: d(2020, 1, 1),
-        nextBillingDate: d(2020, 1, 1),
+        startDate: d(2022, 1, 1),
+        nextBillingDate: d(2022, 1, 1),
       );
 
       final result = engine.rollOver(
@@ -233,7 +233,29 @@ void main() {
         newId: SequentialIds().call,
       );
 
-      expect(result.charges, hasLength(BillingEngine.maxIterations));
+      expect(
+        result.charges,
+        hasLength(d(2022, 1, 1).daysUntil(d(2026, 9, 19))),
+      );
+      expect(result.charges.last.chargedOn, d(2026, 9, 18));
+      expect(result.subscription.nextBillingDate, d(2026, 9, 19));
+    });
+
+    test('stops after the safety cap', () {
+      final sub = subscriptionFixture(
+        period: BillingPeriod.customDays,
+        customDays: 1,
+        startDate: d(1700, 1, 1),
+        nextBillingDate: d(1700, 1, 1),
+      );
+
+      final result = engine.rollOver(
+        sub,
+        d(2026, 9, 19),
+        newId: SequentialIds().call,
+      );
+
+      expect(result.charges, hasLength(BillingEngine.maxRollOverPeriods));
     });
   });
 
