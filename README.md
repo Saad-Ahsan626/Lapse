@@ -284,7 +284,7 @@ The launcher icon and the system splash are hand-written Android resources (no
 foreground and a monochrome layer for Android 13 themed icons, legacy PNGs for Android
 7.x, and the Android 12+ splash showing the same mark the Flutter splash animates. The
 animated splash (a single `CustomPainter` driven straight by its animation: no widget
-rebuilds, cached gradients and pre-rasterised text) plays in full on first launch, a 0.5 s version afterwards, a 200 ms fade
+rebuilds, cached gradients and pre-rasterised text) plays in full (2.1 s) on every launch, a 200 ms fade
 with reduce motion, and is skipped when a notification opens the app.
 
 ## Motion & accessibility

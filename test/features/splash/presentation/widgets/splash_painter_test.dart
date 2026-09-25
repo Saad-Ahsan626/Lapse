@@ -43,7 +43,6 @@ void main() {
   test('paints every frame of every sequence without throwing', () async {
     for (final timeline in const [
       SplashTimeline.full(),
-      SplashTimeline.short(),
       SplashTimeline.reduced(),
     ]) {
       final progress = AnimationController(
@@ -63,7 +62,6 @@ void main() {
   test('warms up every path offscreen once, without notifying', () {
     for (final timeline in const [
       SplashTimeline.full(),
-      SplashTimeline.short(),
       SplashTimeline.reduced(),
     ]) {
       const progress = AlwaysStoppedAnimation<double>(0);

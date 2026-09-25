@@ -205,6 +205,9 @@ void main() {
       expect(find.byType(SplashScreen), findsOneWidget);
 
       await _settle(tester, 30);
+      expect(path(), Routes.splash);
+
+      await _settle(tester, 50);
 
       expect(path(), Routes.home);
       expect(find.byType(SplashScreen), findsNothing);

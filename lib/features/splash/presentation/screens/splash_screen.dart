@@ -73,7 +73,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   SplashTimeline _createTimeline() {
     final timeline = SplashTimeline.forLaunch(
-      onboardingDone: ref.read(settingsProvider).onboardingDone,
       reduceMotion: reduceMotion(context),
     );
     _clock = SplashClock(duration: timeline.duration);

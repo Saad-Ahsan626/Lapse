@@ -101,13 +101,16 @@ void main() {
     expect(find.byType(SplashScreen), findsNothing);
   });
 
-  testWidgets('returning launch plays the short sequence, then home', (
+  testWidgets('returning launch plays the same full sequence, then home', (
     tester,
   ) async {
     final visited = await pumpSplash(tester, onboardingDone: true);
+    final painter = _painterOf(tester);
+    expect(painter.timeline.isFull, isTrue);
 
-    await _play(tester, 500);
+    await _play(tester, 2000);
     expect(visited, isEmpty);
+    expect(painter.elapsedMs, greaterThan(1500));
 
     await _play(tester, 200);
     expect(visited, ['home']);
@@ -130,7 +133,7 @@ void main() {
   testWidgets('navigates once and leaves nothing pending', (tester) async {
     final visited = await pumpSplash(tester, onboardingDone: true);
 
-    await _play(tester, 800);
+    await _play(tester, 2300);
     await tester.pump(const Duration(seconds: 3));
 
     expect(visited, ['home']);
